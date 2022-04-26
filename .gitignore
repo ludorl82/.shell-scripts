@@ -1,0 +1,3 @@
+build-tools/tmp
+scripts/vmotion/relocate_vm.py
+scripts/vmotion/pyvm*
