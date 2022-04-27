@@ -35,10 +35,6 @@ git --git-dir=$HOME/.oh-my-zsh/custom/plugins/zsh-vi-mode/.git --work-tree=$HOME
 [ ! -d $HOME/.oh-my-zsh/custom/plugins/zsh-kubectl-prompt ] && git clone https://github.com/superbrothers/zsh-kubectl-prompt.git ~/.oh-my-zsh/custom/plugins/zsh-kubectl-prompt
 git --git-dir=$HOME/.oh-my-zsh/custom/plugins/zsh-kubectl-prompt/.git --work-tree=$HOME/.oh-my-zsh/custom/plugins/zsh-kubectl-prompt pull
 
-# Upgrade spaceduck
-[ ! -d $HOME/.tmux-spaceduck-terminal ] && git clone https://github.com/pineapplegiant/spaceduck-terminal.git ~/.tmux-spaceduck-terminal
-git --git-dir=$HOME/.tmux-spaceduck-terminal/.git --work-tree=$HOME/.tmux-spaceduck-terminal pull
-
 cd ~/.config/nvim/pack/bundle/start/coc.nvim/
 yarn install
 yarn build
@@ -62,7 +58,7 @@ fi
 
 # Sync console configs
 CONFIGS_DIR="$HOME/.shell-configs/configs"
-SCRIPTS_DIR="$HOME/.shell-configs/scripts"
+SCRIPTS_DIR="$HOME/.shell-scripts/scripts"
 
 # Vim
 [ ! -d ~/.config/nvim ] && mkdir ~/.config/nvim

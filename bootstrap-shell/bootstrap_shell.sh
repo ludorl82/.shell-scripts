@@ -13,5 +13,5 @@ bash $HOME/.shell-scripts/scripts/install_docker.sh
 # Set timezone
 sudo timedatectl set-timezone America/Montreal
  
-# Installing openssh-server
-sudo apt install -y openssh-server
+# Installing packages
+sudo apt install -y openssh-server iftop mtr telnet squid open-vm-tools
