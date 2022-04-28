@@ -1,5 +1,6 @@
 # Bootstrapping the Shell
 This section bootstraps an Ubuntu 20.04 VM from the following ISO:
+
 https://releases.ubuntu.com/20.04/ubuntu-20.04.4-live-server-amd64.iso
 
 ## Run installation
