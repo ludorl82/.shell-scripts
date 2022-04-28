@@ -2,4 +2,4 @@
 
 # Build console
 USER="$(whoami)"
-docker build . --label maintainer=$USER --build-arg USER=$USER
+docker build . --iidfile iid --label maintainer=$USER --build-arg USER=$USER
