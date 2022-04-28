@@ -7,7 +7,7 @@
 ## To run
 
 ```
-cntnr=252d5fd79930
+iid=$(cat iid)
 dsock=/var/run/docker.sock
-docker run -d -v $dsock:$dsock -v $HOME:$HOME $cntnr
+docker run -d -v $dsock:$dsock -v $HOME:$HOME $iid
 ```
