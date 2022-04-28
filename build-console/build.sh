@@ -1,4 +1,5 @@
 #!/bin/bash
 
 # Build console
-docker build . --iidfile ./iid --label maintainer=ludorl82
+USER="$(whoami)"
+docker build . --iidfile ./iid --label maintainer=$USER --build-arg USER=$USER
