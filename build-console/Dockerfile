@@ -18,22 +18,6 @@ RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.g
 RUN apt update
 RUN apt -y install docker-ce-cli
 
-# Install tmux
-RUN apt update && apt install -y git automake build-essential pkg-config \
-                                 libevent-dev libncurses5-dev byacc bison
-RUN rm -fr /tmp/tmux && \
-  git clone https://github.com/tmux/tmux.git /tmp/tmux && \
-  cd /tmp/tmux && \
-  git checkout 3.0 && \
-  sh autogen.sh && \
-  ./configure && make && \
-  make install && \
-  cd - && \
-  rm -fr /tmp/tmux
-
-# Install tmuxinator
-RUN gem install tmuxinator
-
 RUN useradd -ms /usr/bin/zsh $USER
 
 USER $USER
