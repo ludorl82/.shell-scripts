@@ -53,3 +53,5 @@ RUN git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf && \
 # Cloning configs and scripts
 RUN git clone https://github.com/ludorl82/.shell-configs && \
     git clone https://github.com/ludorl82/.shell-scripts
+
+ENTRYPOINT ["tail", "-f", "/dev/null"]
