@@ -1,0 +1,17 @@
+FROM console
+
+ARG USER
+
+USER root
+
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+RUN unzip awscliv2.zip
+
+RUN ./aws/install
+
+RUN rm -f awscliv2.zip
+RUN rm -rf aws
+
+USER $USER
+
+ENTRYPOINT ["tail", "-f", "/dev/null"]

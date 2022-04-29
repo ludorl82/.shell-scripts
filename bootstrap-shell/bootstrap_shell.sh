@@ -15,3 +15,15 @@ sudo timedatectl set-timezone America/Montreal
  
 # Installing packages
 sudo apt install -y openssh-server iftop mtr telnet squid open-vm-tools
+
+# Install tmux
+sudo apt update && sudo apt install -y git automake build-essential pkg-config libevent-dev libncurses5-dev byacc bison
+rm -fr /tmp/tmux
+git clone https://github.com/tmux/tmux.git /tmp/tmux
+cd /tmp/tmux
+git checkout 3.0
+sh autogen.sh
+./configure && make
+sudo make install
+cd -
+rm -fr /tmp/tmux

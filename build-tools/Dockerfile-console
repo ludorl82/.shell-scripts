@@ -18,10 +18,26 @@ RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.g
 RUN apt update
 RUN apt -y install docker-ce-cli
 
+# Set timezone
+RUN rm -rf /etc/localtime
+RUN ln -s /usr/share/zoneinfo/America/Montreal /etc/localtime
+
 RUN useradd -ms /usr/bin/zsh $USER
+
+# Install node and npm
+RUN curl -sL https://deb.nodesource.com/setup_17.x -o nodesource_setup.sh && \
+  bash nodesource_setup.sh && \
+  apt install nodejs && \
+  apt install build-essential && \
+  npm i -g bash-language-server && \
+  npm install -g yarn
 
 USER $USER
 WORKDIR /home/$USER
+
+# Install node and npm
+RUN yarn config set "strict-ssl" false -g
+RUN yarn install
 
 # Install oh-my-zsh
 RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \
