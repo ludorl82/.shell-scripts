@@ -7,6 +7,6 @@ sudo apt update
 sudo apt -y install docker-ce docker-ce-cli containerd.io
 
 # Add yourself to docker group
-sudo groupadd docker
+getent group somegroupname || sudo groupadd docker
 sudo usermod -aG docker $(whoami)
 newgrp docker
