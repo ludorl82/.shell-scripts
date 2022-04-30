@@ -4,7 +4,7 @@ ARG USER
 
 # Install packages
 RUN apt update && export DEBIAN_FRONTEND=noninteractive && export TZ=America/Montreal && \
-  apt install -y software-properties-common zsh ruby-full python3-pip rsync bind9-dnsutils \
+  apt install -y software-properties-common zsh python3-pip rsync bind9-dnsutils \
                  open-vm-tools libnss-ldap libpam-ldap ldap-utils jq exuberant-ctags \
                  curl golang git && \
   add-apt-repository ppa:neovim-ppa/stable && \
