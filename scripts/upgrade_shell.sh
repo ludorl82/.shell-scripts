@@ -27,6 +27,11 @@ git --git-dir=$HOME/.tmux-themepack/.git --work-tree=$HOME/.tmux-themepack pull
 [ ! -d $HOME/.tmux-yank ] && git clone https://github.com/tmux-plugins/tmux-yank.git $HOME/.tmux-yank
 git --git-dir=$HOME/.tmux-yank/.git --work-tree=$HOME/.tmux-yank pull
 
+# Validate oh-my-zsh in installed
+[ ! -f $HOME/.oh-my-zsh/oh-my-zsh.sh ] && rm -rf $HOME/.oh-my-zsh && \
+  sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \
+  rm -f install.sh
+
 # Upgrade zsh-vi-mode
 [ ! -d $HOME/.oh-my-zsh/custom/plugins/zsh-vi-mode ] && git clone https://github.com/jeffreytse/zsh-vi-mode.git ~/.oh-my-zsh/custom/plugins/zsh-vi-mode
 git --git-dir=$HOME/.oh-my-zsh/custom/plugins/zsh-vi-mode/.git --work-tree=$HOME/.oh-my-zsh/custom/plugins/zsh-vi-mode pull
@@ -71,8 +76,6 @@ rsync -avh "${CONFIGS_DIR}/.console.config/nvim/" ~/.config/nvim
 \cp $CONFIGS_DIR/.console.zshrc-aliases ~/.zshrc-aliases
 \cp $CONFIGS_DIR/.console.zshrc-fzf ~/.zshrc-fzf
 \cp $CONFIGS_DIR/.console.zshrc-ludorl82 ~/.zshrc-ludorl82
-[ ! -d ~/.oh-my-zsh ] && sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
-                      && rm -f install.sh
 [ ! -d ~/.oh-my-zsh/custom/plugins/zsh-vi-mode ] && git clone https://github.com/jeffreytse/zsh-vi-mode.git ~/.oh-my-zsh/custom/plugins/zsh-vi-mode
 if [ ! -d ~/.oh-my-zsh/custom/plugins/kubetail ]; then
   cd ~/.oh-my-zsh/custom/plugins/

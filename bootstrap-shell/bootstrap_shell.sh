@@ -20,7 +20,7 @@ sudo ln -s /usr/share/zoneinfo/America/Montreal /etc/localtime
 sudo apt install -y openssh-server iftop mtr telnet squid open-vm-tools ruby-full
 
 # Install tmux
-sudo apt update && sudo apt install -y git automake build-essential pkg-config libevent-dev libncurses5-dev byacc bison
+sudo apt update && sudo apt install -y git automake build-essential pkg-config libevent-dev libncurses5-dev byacc bison zsh
 rm -fr /tmp/tmux
 git clone https://github.com/tmux/tmux.git /tmp/tmux
 cd /tmp/tmux
