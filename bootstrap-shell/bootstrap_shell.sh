@@ -10,7 +10,7 @@ for repo in configs scripts; do
 done
 
 # Install docker
-bash $HOME/.shell-scripts/scripts/install_docker.sh
+$HOME/.shell-scripts/scripts/install_docker.sh
 
 # Set timezone
 sudo rm -rf /etc/localtime
@@ -35,4 +35,4 @@ rm -fr /tmp/tmux
 sudo gem install tmuxinator
 
 # Install configs
-bash $HOME/.shell-scripts/scripts/upgrade_shell.sh
+$HOME/.shell-scripts/scripts/upgrade_shell.sh
