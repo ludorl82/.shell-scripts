@@ -7,14 +7,14 @@
 ## To run
 
 ```
-iid=$(cat iid)
+iid=$(cat tmp/iid-console)
 dsock=/var/run/docker.sock
-docker run -d --cidfile cid -v $dsock:$dsock -v $HOME:$HOME $iid
+docker run -d --cidfile tmp/cid-console -v $dsock:$dsock -v $HOME:$HOME $iid
 ```
 
 ## To attach to container
 
 ```
-cid=$(cat cid)
-docker exec -ti $cid /usr/bin/zsh
+cid=$(cat tmp/cid-console)
+docker exec -e TMUX=$TMUX -e TMUX_DISPLAY=$TMUX_DISPLAY -e WINDOW=$WINDOW -e ENV=$ENV -ti $cid /usr/bin/zsh
 ```
