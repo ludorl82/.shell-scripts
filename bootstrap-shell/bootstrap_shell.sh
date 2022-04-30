@@ -32,3 +32,6 @@ rm -fr /tmp/tmux
 
 # Install tmuxinator
 sudo gem install tmuxinator
+
+# Install configs
+bash $HOME/.shell-scripts/scripts/upgrade_shell.sh
