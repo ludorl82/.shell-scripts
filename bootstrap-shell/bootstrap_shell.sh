@@ -14,7 +14,7 @@ bash $HOME/.shell-scripts/scripts/install_docker.sh
 sudo timedatectl set-timezone America/Montreal
  
 # Installing packages
-sudo apt install -y openssh-server iftop mtr telnet squid open-vm-tools
+sudo apt install -y openssh-server iftop mtr telnet squid open-vm-tools ruby-full
 
 # Install tmux
 sudo apt update && sudo apt install -y git automake build-essential pkg-config libevent-dev libncurses5-dev byacc bison
@@ -27,3 +27,6 @@ sh autogen.sh
 sudo make install
 cd -
 rm -fr /tmp/tmux
+
+# Install tmuxinator
+sudo gem install tmuxinator
