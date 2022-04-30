@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Clone or update .shell-configs, .shell-scripts and save git creds
-for repo in "configs scripts"; do
+for repo in configs scripts; do
   if [[ ! -d $HOME/.shell-$repo ]]; then
     git clone https://github.com/ludorl82/.shell-$repo.git $HOME/.shell-$repo
   else
