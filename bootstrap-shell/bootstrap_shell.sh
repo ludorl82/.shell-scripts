@@ -1,11 +1,13 @@
 #!/bin/bash
 
-# Clone or update .shell-configs and save git creds
-if [[ ! -d $HOME/.shell-configs ]]; then
-	git clone https://github.com/ludorl82/.shell-configs.git $HOME/.shell-configs
-else
-	git -C $HOME/.shell-configs pull
-fi
+# Clone or update .shell-configs, .shell-scripts and save git creds
+for repo in "configs scripts"; do
+  if [[ ! -d $HOME/.shell-$repo ]]; then
+    git clone https://github.com/ludorl82/.shell-$repo.git $HOME/.shell-$repo
+  else
+    git -C $HOME/.shell-$repo pull
+  fi
+done;
 
 # Install docker
 bash $HOME/.shell-scripts/scripts/install_docker.sh
