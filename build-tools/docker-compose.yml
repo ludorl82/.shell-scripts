@@ -1,0 +1,50 @@
+version: "3.3"
+services:
+  console:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - "USER=${USER}"
+    image: console
+    ports:
+      - "2222:22"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "${HOME}:${HOME}"
+  kubectl:
+    build:
+      context: .
+      dockerfile: Dockerfile-kubectl
+      args:
+        - "USER=${USER}"
+    image: kubectl
+    depends_on:
+      - console
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "${HOME}:${HOME}"
+  terraform_0.12.24:
+    build:
+      context: .
+      dockerfile: Dockerfile-terraform_0.12.24
+      args:
+        - "USER=${USER}"
+    image: terraform_0.12.24
+    depends_on:
+      - console
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "${HOME}:${HOME}"
+  terraform_1.1.9:
+    build:
+      context: .
+      dockerfile: Dockerfile-terraform_1.1.9
+      args:
+        - "USER=${USER}"
+    image: terraform_1.1.9
+    depends_on:
+      - console
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "${HOME}:${HOME}"

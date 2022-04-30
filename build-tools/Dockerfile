@@ -2,11 +2,13 @@ FROM ubuntu:20.04
 
 ARG USER
 
+RUN echo User is: $USER
+
 # Install packages
 RUN apt update && export DEBIAN_FRONTEND=noninteractive && export TZ=America/Montreal && \
-  apt install -y software-properties-common zsh python3-pip rsync bind9-dnsutils \
-                 open-vm-tools libnss-ldap libpam-ldap ldap-utils jq exuberant-ctags \
-                 curl golang git && \
+  apt install -y software-properties-common zsh python3-pip rsync bind9-dnsutils ruby-full \
+                 open-vm-tools libnss-ldap libpam-ldap ldap-utils jq exuberant-ctags sudo \
+                 curl golang git openssh-server openssh-server iftop mtr telnet wget && \
   add-apt-repository ppa:neovim-ppa/stable && \
   apt upgrade -y && apt install -y neovim
 
@@ -32,26 +34,23 @@ RUN curl -sL https://deb.nodesource.com/setup_17.x -o nodesource_setup.sh && \
   npm i -g bash-language-server && \
   npm install -g yarn
 
+# Install tmux
+RUN apt update && apt install -y git automake build-essential pkg-config \
+                                      libevent-dev libncurses5-dev byacc bison zsh
+RUN rm -fr /tmp/tmux && \
+  git clone https://github.com/tmux/tmux.git /tmp/tmux
+WORKDIR /tmp/tmux
+RUN git checkout 3.0
+RUN sh autogen.sh
+RUN ./configure && make
+RUN make install
+WORKDIR /home/$USER
+RUN rm -fr /tmp/tmux
+
+# Install tmuxinator
+RUN gem install tmuxinator
+
 USER $USER
 WORKDIR /home/$USER
-
-# Install node and npm
-RUN yarn config set "strict-ssl" false -g
-RUN yarn install
-
-# Install oh-my-zsh
-RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \
-  rm -f install.sh
-
-# Install virtualenv
-RUN pip3 install --user virtualenvwrapper
-
-# Installing fzf
-RUN git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf && \
-  ~/.fzf/install
-
-# Cloning configs and scripts
-RUN git clone https://github.com/ludorl82/.shell-configs && \
-    git clone https://github.com/ludorl82/.shell-scripts
 
 ENTRYPOINT ["tail", "-f", "/dev/null"]

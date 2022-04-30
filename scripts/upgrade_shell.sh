@@ -88,7 +88,7 @@ fi
 if [ ! -d ~/.fzf ]; then
   git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
   ~/.fzf/install
-  ~/.fzf/uninstall
+else
   cd ~/.fzf && git pull && ./install
 fi
 
@@ -106,6 +106,19 @@ chmod 700 ~/.ssh
 if [ ! -f ~/.ssh/authorized_keys ]; then
   ssh-import-id-gh ludorl82
 fi
+
+# Install virtualenv
+pip3 install --user virtualenvwrapper
+
+# Install node and npm https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-ubuntu-18-04
+curl -sL https://deb.nodesource.com/setup_17.x -o nodesource_setup.sh
+sudo bash nodesource_setup.sh
+sudo apt install nodejs
+sudo apt install build-essential
+sudo npm i -g bash-language-server
+sudo npm install -g yarn
+yarn config set "strict-ssl" false -g
+yarn install
 
 # Git
 \cp $CONFIGS_DIR/.console.gitconfig ~/.gitconfig
