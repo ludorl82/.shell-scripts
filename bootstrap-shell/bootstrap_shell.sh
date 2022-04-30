@@ -13,7 +13,8 @@ done
 bash $HOME/.shell-scripts/scripts/install_docker.sh
 
 # Set timezone
-sudo timedatectl set-timezone America/Montreal
+sudo rm -rf /etc/localtime
+sudo ln -s /usr/share/zoneinfo/America/Montreal /etc/localtime
  
 # Installing packages
 sudo apt install -y openssh-server iftop mtr telnet squid open-vm-tools ruby-full
