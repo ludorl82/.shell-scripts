@@ -7,7 +7,7 @@ for repo in configs scripts; do
   else
     git -C $HOME/.shell-$repo pull
   fi
-done;
+done
 
 # Install docker
 bash $HOME/.shell-scripts/scripts/install_docker.sh
