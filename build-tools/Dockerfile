@@ -8,7 +8,7 @@ RUN echo User is: $USER
 RUN apt update && export DEBIAN_FRONTEND=noninteractive && export TZ=America/Montreal && \
   apt install -y software-properties-common zsh python3-pip rsync bind9-dnsutils ruby-full \
                  open-vm-tools libnss-ldap libpam-ldap ldap-utils jq exuberant-ctags sudo \
-                 curl golang git openssh-server openssh-server iftop mtr telnet wget && \
+                 curl golang git iftop mtr telnet wget && \
   add-apt-repository ppa:neovim-ppa/stable && \
   apt upgrade -y && apt install -y neovim
 
@@ -19,12 +19,15 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
 RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 RUN apt update
 RUN apt -y install docker-ce-cli
+RUN groupadd docker
 
 # Set timezone
 RUN rm -rf /etc/localtime
 RUN ln -s /usr/share/zoneinfo/America/Montreal /etc/localtime
 
-RUN useradd -ms /usr/bin/zsh $USER
+# Create user
+RUN useradd -rm -d /home/$USER -s /usr/bin/zsh -g root -G sudo -u 1000 -p "$(openssl passwd -1 ubuntu)" $USER
+RUN gpasswd -a $USER docker
 
 # Install node and npm
 RUN curl -sL https://deb.nodesource.com/setup_17.x -o nodesource_setup.sh && \
@@ -52,5 +55,3 @@ RUN gem install tmuxinator
 
 USER $USER
 WORKDIR /home/$USER
-
-ENTRYPOINT ["tail", "-f", "/dev/null"]

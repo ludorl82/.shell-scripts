@@ -1,4 +1,4 @@
-FROM console
+FROM base
 
 ARG USER
 

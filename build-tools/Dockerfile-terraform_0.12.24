@@ -1,4 +1,4 @@
-FROM console
+FROM base
 
 ARG USER
 
@@ -10,3 +10,5 @@ RUN wget https://releases.hashicorp.com/terraform/0.12.31/terraform_0.12.31_linu
   rm -f terraform_0.12.31_linux_amd64.zip
 
 USER $USER
+
+ENTRYPOINT ["tail", "-f", "/dev/null"]

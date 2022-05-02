@@ -1,9 +1,16 @@
 version: "3.3"
 services:
-  console:
+  base:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - "USER=${USER}"
+    image: base
+  console:
+    build:
+      context: .
+      dockerfile: Dockerfile-console
       args:
         - "USER=${USER}"
     image: console
@@ -20,7 +27,7 @@ services:
         - "USER=${USER}"
     image: kubectl
     depends_on:
-      - console
+      - base
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "${HOME}:${HOME}"
@@ -32,7 +39,7 @@ services:
         - "USER=${USER}"
     image: terraform_0.12.24
     depends_on:
-      - console
+      - base
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "${HOME}:${HOME}"
@@ -44,7 +51,7 @@ services:
         - "USER=${USER}"
     image: terraform_1.1.9
     depends_on:
-      - console
+      - base
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "${HOME}:${HOME}"
