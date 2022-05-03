@@ -17,7 +17,7 @@ sudo rm -rf /etc/localtime
 sudo ln -s /usr/share/zoneinfo/America/Montreal /etc/localtime
  
 # Installing packages
-sudo apt update & sudo apt upgrade -y
+sudo apt update && sudo apt upgrade -y
 sudo apt install -y openssh-server iftop mtr telnet squid open-vm-tools \
                     ruby-full docker-compose
 
