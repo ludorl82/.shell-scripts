@@ -26,8 +26,7 @@ RUN rm -rf /etc/localtime
 RUN ln -s /usr/share/zoneinfo/America/Montreal /etc/localtime
 
 # Create user
-RUN useradd -rm -d /home/$USER -s /usr/bin/zsh -G sudo -u 1000 -p "$(openssl passwd -1 ubuntu)" $USER
-RUN gpasswd -a $USER docker
+RUN useradd -rm -d /home/$USER -s /usr/bin/zsh -G sudo -G 998 -G docker -u 1000 -p "$(openssl passwd -1 ubuntu)" $USER
 
 # Install node and npm
 RUN curl -sL https://deb.nodesource.com/setup_17.x -o nodesource_setup.sh && \
