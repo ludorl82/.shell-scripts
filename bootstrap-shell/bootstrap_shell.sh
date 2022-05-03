@@ -25,4 +25,6 @@ sudo apt install -y openssh-server iftop mtr telnet squid open-vm-tools \
 sudo systemctl enable docker
 sudo systemctl start docker
 cd ~/.shell-scripts/build-tools
+/usr/bin/newgrp docker <<EONG
 docker-compose up -d
+EONG
