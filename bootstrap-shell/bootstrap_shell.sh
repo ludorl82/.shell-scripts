@@ -25,4 +25,4 @@ sudo apt install -y openssh-server iftop mtr telnet squid open-vm-tools \
 sudo systemctl enable docker
 sudo systemctl start docker
 cd ~/.shell-scripts/build-tools
-sudo docker-compose up -d
+docker-compose up -d
