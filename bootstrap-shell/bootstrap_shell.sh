@@ -11,11 +11,19 @@ done
 
 # Install docker
 $HOME/.shell-scripts/scripts/install_docker.sh
+newgrp docker
 
 # Set timezone
 sudo rm -rf /etc/localtime
 sudo ln -s /usr/share/zoneinfo/America/Montreal /etc/localtime
  
 # Installing packages
-sudo apt install -y openssh-server iftop mtr telnet squid open-vm-tools ruby-full
+sudo apt update & sudo apt upgrade -y
+sudo apt install -y openssh-server iftop mtr telnet squid open-vm-tools \
+                    ruby-full docker-compose
 
+# Build docker images
+git clone https://github.com/ludorl82/.shell-configs.git
+git clone https://github.com/ludorl82/.shell-scripts.git
+cd ~/.shell-scripts/build-tools
+docker-compose up -d
