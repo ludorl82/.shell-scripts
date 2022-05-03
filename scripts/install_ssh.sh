@@ -1,8 +1,6 @@
 #!/bin/bash
 
 apt update && apt install -y openssh-server
-mkdir /run/sshd
-ssh-keygen -A
 
 # Ensure SSH configs are done
 SSHD_CONFIG="/etc/ssh/sshd_config"
