@@ -26,7 +26,7 @@ RUN rm -rf /etc/localtime
 RUN ln -s /usr/share/zoneinfo/America/Montreal /etc/localtime
 
 # Create user
-RUN useradd -rm -d /home/$USER -s /usr/bin/zsh -g root -G sudo -u 1000 -p "$(openssl passwd -1 ubuntu)" $USER
+RUN useradd -rm -d /home/$USER -s /usr/bin/zsh -g $USER -G sudo -u 1000 -p "$(openssl passwd -1 ubuntu)" $USER
 RUN gpasswd -a $USER docker
 
 # Install node and npm
