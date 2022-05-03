@@ -11,6 +11,8 @@ done
 
 # Install docker
 $HOME/.shell-scripts/scripts/install_docker.sh
+sudo systemctl enable docker
+sudo systemctl start docker
 
 # Set timezone
 sudo rm -rf /etc/localtime
