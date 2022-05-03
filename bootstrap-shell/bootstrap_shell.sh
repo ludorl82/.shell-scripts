@@ -11,7 +11,6 @@ done
 
 # Install docker
 $HOME/.shell-scripts/scripts/install_docker.sh
-newgrp docker
 
 # Set timezone
 sudo rm -rf /etc/localtime
