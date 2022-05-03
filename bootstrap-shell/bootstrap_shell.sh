@@ -11,8 +11,6 @@ done
 
 # Install docker
 $HOME/.shell-scripts/scripts/install_docker.sh
-sudo systemctl enable docker
-sudo systemctl start docker
 
 # Set timezone
 sudo rm -rf /etc/localtime
@@ -24,7 +22,7 @@ sudo apt install -y openssh-server iftop mtr telnet squid open-vm-tools \
                     ruby-full docker-compose
 
 # Build docker images
-git clone https://github.com/ludorl82/.shell-configs.git
-git clone https://github.com/ludorl82/.shell-scripts.git
+sudo systemctl enable docker
+sudo systemctl start docker
 cd ~/.shell-scripts/build-tools
-docker-compose up -d
+sudo docker-compose up -d
