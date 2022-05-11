@@ -14,6 +14,9 @@ if [[ ! -z "$DISPLAY" ]]; then
 elif [[ "$CLIENT" = "termux" ]]; then
   string="$(</dev/stdin)"
   echo -n "$string" | ssh -p8022 u0_a311@localhost 'cat | termux-clipboard-set'
+elif [[ "$CLIENT" = "mintty" ]]; then
+  string="$(</dev/stdin)"
+  echo -n "$string" | ssh -p8023 ludor@localhost 'cat > /dev/clipboard'
 else
   echo "No clipboard sync method" && exit 0
 fi
