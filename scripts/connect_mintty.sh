@@ -2,5 +2,6 @@
 
 # Set environment
 export ENV=$1
-export DISPLAY=localhost:0.0
-ssh -Y -o SendEnv=ENV ludorl82@ssh
+export CLIENT=$2
+if [[ "$(ps ax | grep sshd | grep -v grep | wc -l)" = "0" ]]; then /usr/bin/sshd; fi
+ssh -p2222 -o SendEnv=ENV -o SendEnv=CLIENT -o StrictHostKeyChecking=no -R 8023:localhost:22 ludorl82@shell.telepitpit.com
