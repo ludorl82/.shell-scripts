@@ -31,6 +31,18 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "${HOME}:${HOME}"
+  packer_1.8.0:
+    build:
+      context: .
+      dockerfile: Dockerfile-terraform_1.8.0
+      args:
+        - "USER=${USER}"
+    image: packer_1.8.0
+    depends_on:
+      - base
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "${HOME}:${HOME}"
   terraform_0.12.29:
     build:
       context: .
