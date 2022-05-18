@@ -1,0 +1,14 @@
+FROM base
+
+ARG USER
+
+USER root
+
+RUN wget https://releases.hashicorp.com/packer/1.8.0/packer_1.8.0_linux_amd64.zip && \
+  unzip packer_1.8.0_linux_amd64.zip && \
+  mv packer /usr/bin && \
+  rm -f packer_1.8.0_linux_amd64.zip
+
+USER $USER
+
+ENTRYPOINT ["tail", "-f", "/dev/null"]

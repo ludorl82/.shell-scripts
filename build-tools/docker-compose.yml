@@ -34,7 +34,7 @@ services:
   packer_1.8.0:
     build:
       context: .
-      dockerfile: Dockerfile-terraform_1.8.0
+      dockerfile: Dockerfile-packer_1.8.0
       args:
         - "USER=${USER}"
     image: packer_1.8.0
