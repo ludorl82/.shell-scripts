@@ -31,13 +31,13 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "${HOME}:${HOME}"
-  terraform_0.12.24:
+  terraform_0.12.29:
     build:
       context: .
-      dockerfile: Dockerfile-terraform_0.12.24
+      dockerfile: Dockerfile-terraform_0.12.29
       args:
         - "USER=${USER}"
-    image: terraform_0.12.24
+    image: terraform_0.12.29
     depends_on:
       - base
     volumes:
