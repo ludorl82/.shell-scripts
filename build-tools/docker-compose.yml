@@ -19,6 +19,7 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "${HOME}:${HOME}"
+    restart: always
   kubectl:
     build:
       context: .
@@ -31,6 +32,7 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "${HOME}:${HOME}"
+    restart: always
   packer_1.8.0:
     build:
       context: .
@@ -43,6 +45,7 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "${HOME}:${HOME}"
+    restart: always
   terraform_0.12.29:
     build:
       context: .
@@ -55,6 +58,7 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "${HOME}:${HOME}"
+    restart: always
   terraform_1.1.9:
     build:
       context: .
@@ -67,3 +71,4 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "${HOME}:${HOME}"
+    restart: always
