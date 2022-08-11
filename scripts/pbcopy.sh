@@ -1,14 +1,5 @@
 #!/bin/bash
 
-#string="$(</dev/stdin)"
-#echo $string > /tmp/clip
-#sed -i '${/^$/d;}' /tmp/clip
-#sed -i '$s/\r//g' /tmp/clip
-#echo -n "$string" | sed 's/$'"/`echo \\\r`/" | ssh -p2222 localhost 'cat > /dev/clipboard'
-#echo -n "$string" | ssh -p2222 localhost 'cat > /dev/clipboard'
-#echo -n "$string" | xsel -b
-#xsel -b </dev/stdin
-#xclip -rmlastnl </dev/stdin
 if [[ ! -z "$DISPLAY" ]]; then
   xclip </dev/stdin
 elif [[ "$CLIENT" = "termux" ]]; then
@@ -16,7 +7,12 @@ elif [[ "$CLIENT" = "termux" ]]; then
   echo -n "$string" | ssh -p8022 u0_a311@localhost 'cat | termux-clipboard-set'
 elif [[ "$CLIENT" = "mintty" ]]; then
   string="$(</dev/stdin)"
-  echo -n "$string" | ssh -p8023 ludor@localhost 'cat > /dev/clipboard'
+  if [[ "$(tmux ls | grep mintty-ssh | wc -l)" -eq "0" ]]; then
+    tmux new-session -d -s mintty-ssh 'ssh -o StrictHostKeyChecking=no -p8023 rpsja772@127.0.0.1'
+    sleep 2
+  fi
+  echo -n "$string" > /home/rpsja772/tmp/mintty-ssh
+  tmux send-keys -t mintty-ssh "ssh -o StrictHostKeyChecking=no -p2222 rpsja772@127.0.0.1 cat /home/rpsja772/tmp/mintty-ssh > /dev/clipboard" ENTER
 else
   echo "No clipboard sync method" && exit 0
 fi
