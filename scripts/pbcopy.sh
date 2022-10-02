@@ -5,11 +5,11 @@ if [[ ! -z "$DISPLAY" ]]; then
 elif [[ "$CLIENT" = "mintty" ]]; then
   string="$(</dev/stdin)"
   if [[ "$(tmux ls | grep mintty-ssh | wc -l)" -eq "0" ]]; then
-    tmux new-session -d -s mintty-ssh 'ssh -o StrictHostKeyChecking=no -p8023 ludorl82@127.0.0.1'
+    tmux new-session -d -s mintty-ssh 'ssh -o StrictHostKeyChecking=no -p8023 -R22:localhost:22 ludor@127.0.0.1'
     sleep 2
   fi
   echo -n "$string" > /home/ludorl82/tmp/mintty-ssh
-  tmux send-keys -t mintty-ssh "ssh -o StrictHostKeyChecking=no -p2222 ludorl82@127.0.0.1 cat /home/ludorl82/tmp/mintty-ssh > /dev/clipboard" ENTER
+  tmux send-keys -t mintty-ssh "ssh -o StrictHostKeyChecking=no ludorl82@localhost cat /home/ludorl82/tmp/mintty-ssh > /dev/clipboard" ENTER
 else
   string="$(</dev/stdin)"
   if [[ "$(tmux ls | grep termux-ssh | wc -l)" -eq "0" ]]; then

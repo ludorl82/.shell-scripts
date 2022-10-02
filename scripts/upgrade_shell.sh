@@ -1,48 +1,73 @@
 #!/bin/bash
-
-PLUGINS_DIR="$HOME/.config/nvim/pack/bundle/start"
-[ ! -d $PLUGINS_DIR/awesome-vim-colorschemes ] && mkdir -p $PLUGINS_DIR
+CONFIGS_DIR="$HOME/.shell-configs/configs"
+SCRIPTS_DIR="$HOME/.shell-scripts/scripts"
+VIM_PLUGINS_DIR="$HOME/.config/nvim/pack/bundle/start"
+ZSH_DIR="$HOME/.zsh"
+ZSH_PLUGINS_DIR="$ZSH_DIR/plugins"
+ZSH_THEMES_DIR="$ZSH_DIR/themes"
+TMUX_DIR=$HOME/.tmux
+TMUX_PLUGINS_DIR=$TMUX_DIR/plugins
 
 # Upgrade vim plugins
-cd $PLUGINS_DIR
-[ ! -d $PLUGINS_DIR/awesome-vim-colorschemes ] && git clone https://github.com/rafi/awesome-vim-colorschemes.git
-[ ! -d $PLUGINS_DIR/coc.nvim ] && git clone https://github.com/neoclide/coc.nvim.git
-[ ! -d $PLUGINS_DIR/fzf ] && git clone https://github.com/junegunn/fzf.git
-[ ! -d $PLUGINS_DIR/fzf.vim ] && git clone https://github.com/junegunn/fzf.vim.git
-[ ! -d $PLUGINS_DIR/nerdtree ] && git clone https://github.com/preservim/nerdtree.git
-[ ! -d $PLUGINS_DIR/vim-airline ] && git clone https://github.com/vim-airline/vim-airline.git
-[ ! -d $PLUGINS_DIR/vim-devicons ] && git clone https://github.com/ryanoasis/vim-devicons.git
-[ ! -d $PLUGINS_DIR/vim-fugitive ] && git clone https://github.com/tpope/vim-fugitive.git
-[ ! -d $PLUGINS_DIR/vim-gitgutter ] && git clone https://github.com/airblade/vim-gitgutter.git
-[ ! -d $PLUGINS_DIR/vim-matchit ] && git clone https://github.com/adelarsq/vim-matchit.git
-[ ! -d $PLUGINS_DIR/vim-tmux-navigator ] && git clone https://github.com/christoomey/vim-tmux-navigator.git
-find $PLUGINS_DIR -mindepth 1 -maxdepth 1 -type d -exec git --git-dir={}/.git --work-tree={} pull \;
+mkdir -p $VIM_PLUGINS_DIR
+cd $VIM_PLUGINS_DIR
+[ ! -d $VIM_PLUGINS_DIR/awesome-vim-colorschemes ] && git clone https://github.com/rafi/awesome-vim-colorschemes.git
+[ ! -d $VIM_PLUGINS_DIR/coc.nvim ] && git clone https://github.com/neoclide/coc.nvim.git
+[ ! -d $VIM_PLUGINS_DIR/fzf ] && git clone https://github.com/junegunn/fzf.git
+[ ! -d $VIM_PLUGINS_DIR/fzf.vim ] && git clone https://github.com/junegunn/fzf.vim.git
+[ ! -d $VIM_PLUGINS_DIR/nerdtree ] && git clone https://github.com/preservim/nerdtree.git
+[ ! -d $VIM_PLUGINS_DIR/vim-airline ] && git clone https://github.com/vim-airline/vim-airline.git
+[ ! -d $VIM_PLUGINS_DIR/vim-devicons ] && git clone https://github.com/ryanoasis/vim-devicons.git
+[ ! -d $VIM_PLUGINS_DIR/vim-fugitive ] && git clone https://github.com/tpope/vim-fugitive.git
+[ ! -d $VIM_PLUGINS_DIR/vim-gitgutter ] && git clone https://github.com/airblade/vim-gitgutter.git
+[ ! -d $VIM_PLUGINS_DIR/vim-matchit ] && git clone https://github.com/adelarsq/vim-matchit.git
+[ ! -d $VIM_PLUGINS_DIR/vim-tmux-navigator ] && git clone https://github.com/christoomey/vim-tmux-navigator.git
+find $VIM_PLUGINS_DIR -mindepth 1 -maxdepth 1 -type d -exec git --git-dir={}/.git --work-tree={} pull \;
 
-# Upgrade tmux themepack
-cd $HOME
-[ ! -d $HOME/.tmux-themepack ] && git clone https://github.com/jimeh/tmux-themepack.git $HOME/.tmux-themepack
-git --git-dir=$HOME/.tmux-themepack/.git --work-tree=$HOME/.tmux-themepack pull
-
-# Upgrade tmux yank
-[ ! -d $HOME/.tmux-yank ] && git clone https://github.com/tmux-plugins/tmux-yank.git $HOME/.tmux-yank
-git --git-dir=$HOME/.tmux-yank/.git --work-tree=$HOME/.tmux-yank pull
-
-# Validate oh-my-zsh in installed
-[ ! -f $HOME/.oh-my-zsh/oh-my-zsh.sh ] && rm -rf $HOME/.oh-my-zsh && \
-  sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \
-  rm -f install.sh
-
-# Upgrade zsh-vi-mode
-[ ! -d $HOME/.oh-my-zsh/custom/plugins/zsh-vi-mode ] && git clone https://github.com/jeffreytse/zsh-vi-mode.git ~/.oh-my-zsh/custom/plugins/zsh-vi-mode
-git --git-dir=$HOME/.oh-my-zsh/custom/plugins/zsh-vi-mode/.git --work-tree=$HOME/.oh-my-zsh/custom/plugins/zsh-vi-mode pull
-
-# Upgrade zsh kube context
-[ ! -d $HOME/.oh-my-zsh/custom/plugins/zsh-kubectl-prompt ] && git clone https://github.com/superbrothers/zsh-kubectl-prompt.git ~/.oh-my-zsh/custom/plugins/zsh-kubectl-prompt
-git --git-dir=$HOME/.oh-my-zsh/custom/plugins/zsh-kubectl-prompt/.git --work-tree=$HOME/.oh-my-zsh/custom/plugins/zsh-kubectl-prompt pull
+# Sync nvim configs
+rsync -avh "${CONFIGS_DIR}/.console.config/nvim/" $HOME/.config/nvim
 
 cd ~/.config/nvim/pack/bundle/start/coc.nvim/
 yarn install
 yarn build
+
+# Upgrade zsh plugins
+mkdir -p $ZSH_PLUGINS_DIR
+cd $ZSH_PLUGINS_DIR
+[ ! -d $ZSH_PLUGINS_DIR/zsh-vi-mode ] && git clone https://github.com/jeffreytse/zsh-vi-mode.git
+[ ! -d $ZSH_PLUGINS_DIR/zsh-kubectl-prompt ] && git clone https://github.com/superbrothers/zsh-kubectl-prompt
+find $ZSH_PLUGINS_DIR -mindepth 1 -maxdepth 1 -type d -exec git --git-dir={}/.git --work-tree={} pull \;
+
+# Upgrade zsh themes
+mkdir -p $ZSH_THEMES_DIR
+cd $ZSH_THEMES_DIR
+[ ! -d $ZSH_THEMES_DIR/agnoster-zsh-theme ] && git clone https://github.com/agnoster/agnoster-zsh-theme.git
+find $ZSH_THEMES_DIR -mindepth 1 -maxdepth 1 -type d -exec git --git-dir={}/.git --work-tree={} pull \;
+
+# ZSH
+cp $CONFIGS_DIR/.console.zshrc $ZSH_DIR/.zshrc
+cp $CONFIGS_DIR/.console.zshrc-Darwin $ZSH_DIR/.zshrc-Darwin
+cp $CONFIGS_DIR/.console.zshrc-Linux $ZSH_DIR/.zshrc-Linux
+cp $CONFIGS_DIR/.console.zshrc-aliases $ZSH_DIR/.zshrc-aliases
+cp $CONFIGS_DIR/.console.zshrc-fzf $ZSH_DIR/.zshrc-fzf
+cp $CONFIGS_DIR/.console.zshrc-ludorl82 $ZSH_DIR/.zshrc-ludorl82
+[ ! -e $HOME/.zshrc ] && ln -s -T $ZSH_DIR/.zshrc $HOME/.zshrc
+
+# Upgrade tmux plugins
+mkdir -p $TMUX_PLUGINS_DIR
+cd $TMUX_PLUGINS_DIR
+[ ! -d $TMUX_PLUGINS_DIR/tmux-themepack ] && git clone https://github.com/jimeh/tmux-themepack.git
+[ ! -d $TMUX_PLUGINS_DIR/tmux-yank ] && git clone https://github.com/tmux-plugins/tmux-yank.git
+find $TMUX_PLUGINS_DIR -mindepth 1 -maxdepth 1 -type d -exec git --git-dir={}/.git --work-tree={} pull \;
+
+# Tmux configs import
+cp $CONFIGS_DIR/.console.tmux.conf $TMUX_DIR/.tmux.conf
+cp $CONFIGS_DIR/.console.tmux.console.conf $TMUX_DIR/.tmux.console.conf
+cp $CONFIGS_DIR/.console.tmux.keys.conf $TMUX_DIR/.tmux.keys.conf
+cp $CONFIGS_DIR/.console.tmux.Linux.conf $TMUX_DIR/.tmux.Linux.conf
+cp $CONFIGS_DIR/.console.gitmux.conf $TMUX_DIR/.gitmux.conf
+rsync -avh "$CONFIGS_DIR/.console.config/tmuxinator/" $HOME/.config/tmuxinator --delete
+[ ! -e $HOME/.tmux.conf ] && ln -s -T $TMUX_DIR/.tmux.conf $HOME/.tmux.conf
 
 # Ensure SSH configs are done
 SSHD_CONFIG="/etc/ssh/sshd_config"
@@ -62,43 +87,13 @@ else
 fi
 
 # Sync console configs
-CONFIGS_DIR="$HOME/.shell-configs/configs"
-SCRIPTS_DIR="$HOME/.shell-scripts/scripts"
-
-# Vim
-[ ! -d ~/.config/nvim ] && mkdir ~/.config/nvim
-rsync -avh "${CONFIGS_DIR}/.console.config/nvim/" ~/.config/nvim
-
-# ZSH
-\cp $CONFIGS_DIR/.console.zshrc ~/.zshrc
-\cp $CONFIGS_DIR/.console.zshrc-Darwin ~/.zshrc-Darwin
-\cp $CONFIGS_DIR/.console.zshrc-Linux ~/.zshrc-Linux
-\cp $CONFIGS_DIR/.console.zshrc-aliases ~/.zshrc-aliases
-\cp $CONFIGS_DIR/.console.zshrc-fzf ~/.zshrc-fzf
-\cp $CONFIGS_DIR/.console.zshrc-ludorl82 ~/.zshrc-ludorl82
-[ ! -d ~/.oh-my-zsh/custom/plugins/zsh-vi-mode ] && git clone https://github.com/jeffreytse/zsh-vi-mode.git ~/.oh-my-zsh/custom/plugins/zsh-vi-mode
-if [ ! -d ~/.oh-my-zsh/custom/plugins/kubetail ]; then
-  cd ~/.oh-my-zsh/custom/plugins/
-  git clone https://github.com/johanhaleby/kubetail.git kubetail
-  [ ! -d ~/.local/bin ] && mkdir -p ~/.local/bin
-  cp ~/.oh-my-zsh/custom/plugins/kubetail/kubetail ~/.local/bin
-fi
-
 # FZF
-if [ ! -d ~/.fzf ]; then
-  git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
-  ~/.fzf/install
+if [ ! -d $HOME/.fzf ]; then
+  git clone --depth 1 https://github.com/junegunn/fzf.git $HOME/.fzf
+  yes | $HOME/.fzf/install
 else
-  cd ~/.fzf && git pull && ./install
+  cd ~/.fzf && git pull && yes | $HOME/.fzf/install
 fi
-
-# tmux
-\cp $CONFIGS_DIR/.console.tmux.conf ~/.tmux.conf
-\cp $CONFIGS_DIR/.console.tmux.console.conf ~/.tmux.console.conf
-\cp $CONFIGS_DIR/.console.tmux.keys.conf ~/.tmux.keys.conf
-\cp $CONFIGS_DIR/.console.tmux.Linux.conf ~/.tmux.Linux.conf
-\cp $CONFIGS_DIR/.console.gitmux.conf ~/.gitmux.conf
-rsync -avh "${CONFIGS_DIR}/.console.config/tmuxinator/" $HOME/.config/tmuxinator --delete
 
 # SSH
 [ ! -d ~/.ssh/ ] && mkdir -p ~/.ssh/ && ssh-keygen
@@ -111,18 +106,21 @@ fi
 pip3 install --user virtualenvwrapper
 
 # Install node and npm https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-ubuntu-18-04
-curl -sL https://deb.nodesource.com/setup_17.x -o nodesource_setup.sh
-sudo bash nodesource_setup.sh
-sudo apt install nodejs
-sudo apt install build-essential
-sudo npm i -g bash-language-server
-sudo npm install -g yarn
-yarn config set "strict-ssl" false -g
-yarn install
+cd
+if [ ! -f nodesource_setup.sh ]; then
+  curl -sL https://deb.nodesource.com/setup_17.x -o nodesource_setup.sh
+  sudo bash nodesource_setup.sh
+  sudo apt install nodejs
+  sudo apt install build-essential
+  sudo npm i -g bash-language-server
+  sudo npm install -g yarn
+  yarn config set "strict-ssl" false -g
+  yarn install
+fi
 
 # Git
-\cp $CONFIGS_DIR/.console.gitconfig ~/.gitconfig
+cp $CONFIGS_DIR/.console.gitconfig $HOME/.gitconfig
 
 # Bash for zsh console
-\cp $CONFIGS_DIR/.console.bashrc ~/.bashrc
-\cp $CONFIGS_DIR/.console.inputrc ~/.inputrc
+cp $CONFIGS_DIR/.console.bashrc $HOME/.bashrc
+cp $CONFIGS_DIR/.console.inputrc $HOME/.inputrc
