@@ -35,7 +35,10 @@ yarn build
 mkdir -p $ZSH_PLUGINS_DIR
 cd $ZSH_PLUGINS_DIR
 [ ! -d $ZSH_PLUGINS_DIR/zsh-vi-mode ] && git clone https://github.com/jeffreytse/zsh-vi-mode.git
-[ ! -d $ZSH_PLUGINS_DIR/zsh-kubectl-prompt ] && git clone https://github.com/superbrothers/zsh-kubectl-prompt
+[ ! -d $ZSH_PLUGINS_DIR/zsh-kubectl-prompt ] && git clone https://github.com/superbrothers/zsh-kubectl-prompt.git
+[ ! -d $ZSH_PLUGINS_DIR/zsh-autocomplete ] && git clone https://github.com/marlonrichert/zsh-autocomplete.git
+[ ! -d $ZSH_PLUGINS_DIR/zsh-syntax-highlighting ] && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git
+[ ! -d $ZSH_PLUGINS_DIR/zsh-autosuggestions ] && git clone https://github.com/zsh-users/zsh-autosuggestions.git
 find $ZSH_PLUGINS_DIR -mindepth 1 -maxdepth 1 -type d -exec git --git-dir={}/.git --work-tree={} pull \;
 
 # Upgrade zsh themes
