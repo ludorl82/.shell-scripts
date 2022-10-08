@@ -13,8 +13,7 @@ mkdir -p $VIM_PLUGINS_DIR
 cd $VIM_PLUGINS_DIR
 [ ! -d $VIM_PLUGINS_DIR/awesome-vim-colorschemes ] && git clone https://github.com/rafi/awesome-vim-colorschemes.git
 [ ! -d $VIM_PLUGINS_DIR/coc.nvim ] && git clone https://github.com/neoclide/coc.nvim.git
-[ ! -d $VIM_PLUGINS_DIR/fzf ] && git clone https://github.com/junegunn/fzf.git
-[ ! -d $VIM_PLUGINS_DIR/fzf.vim ] && git clone https://github.com/junegunn/fzf.vim.git
+#[ ! -d $VIM_PLUGINS_DIR/fzf.vim ] && git clone https://github.com/junegunn/fzf.vim.git
 [ ! -d $VIM_PLUGINS_DIR/nerdtree ] && git clone https://github.com/preservim/nerdtree.git
 [ ! -d $VIM_PLUGINS_DIR/vim-airline ] && git clone https://github.com/vim-airline/vim-airline.git
 [ ! -d $VIM_PLUGINS_DIR/vim-devicons ] && git clone https://github.com/ryanoasis/vim-devicons.git
@@ -34,7 +33,8 @@ yarn build
 # Upgrade zsh plugins
 mkdir -p $ZSH_PLUGINS_DIR
 cd $ZSH_PLUGINS_DIR
-[ ! -d $ZSH_PLUGINS_DIR/zsh-vi-mode ] && git clone https://github.com/jeffreytse/zsh-vi-mode.git
+[ ! -d $ZSH_PLUGINS_DIR/fzf ] && git clone https://github.com/junegunn/fzf.git
+#[ ! -d $ZSH_PLUGINS_DIR/zsh-vi-mode ] && git clone https://github.com/jeffreytse/zsh-vi-mode.git
 [ ! -d $ZSH_PLUGINS_DIR/zsh-kubectl-prompt ] && git clone https://github.com/superbrothers/zsh-kubectl-prompt.git
 [ ! -d $ZSH_PLUGINS_DIR/zsh-autocomplete ] && git clone https://github.com/marlonrichert/zsh-autocomplete.git
 [ ! -d $ZSH_PLUGINS_DIR/zsh-syntax-highlighting ] && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git
@@ -48,13 +48,15 @@ cd $ZSH_THEMES_DIR
 find $ZSH_THEMES_DIR -mindepth 1 -maxdepth 1 -type d -exec git --git-dir={}/.git --work-tree={} pull \;
 
 # ZSH
-cp $CONFIGS_DIR/.console.zshrc $ZSH_DIR/.zshrc
-cp $CONFIGS_DIR/.console.zshrc-Darwin $ZSH_DIR/.zshrc-Darwin
-cp $CONFIGS_DIR/.console.zshrc-Linux $ZSH_DIR/.zshrc-Linux
-cp $CONFIGS_DIR/.console.zshrc-aliases $ZSH_DIR/.zshrc-aliases
-cp $CONFIGS_DIR/.console.zshrc-fzf $ZSH_DIR/.zshrc-fzf
-cp $CONFIGS_DIR/.console.zshrc-ludorl82 $ZSH_DIR/.zshrc-ludorl82
-[ ! -e $HOME/.zshrc ] && ln -s -T $ZSH_DIR/.zshrc $HOME/.zshrc
+cp $CONFIGS_DIR/.console.zshrc.zsh $ZSH_DIR/zshrc.zsh
+cp $CONFIGS_DIR/.console.Darwin.zsh $ZSH_DIR/Darwin.zsh
+cp $CONFIGS_DIR/.console.Linux.zsh $ZSH_DIR/Linux.zsh
+cp $CONFIGS_DIR/.console.aliases.zsh $ZSH_DIR/aliases.zsh
+cp $CONFIGS_DIR/.console.fzf.zsh $ZSH_DIR/fzf.zsh
+cp $CONFIGS_DIR/.console.ludorl82.zsh $ZSH_DIR/ludorl82.zsh
+cp $CONFIGS_DIR/.console.bindings.zsh $ZSH_DIR/bindings.zsh
+[ ! -e $HOME/.zshrc ] && ln -s -T $ZSH_DIR/zshrc.zsh $HOME/.zshrc
+[ ! -e $HOME/.fzf.zsh ] && ln -s -T $ZSH_DIR/fzf.zsh $HOME/.fzf.zsh
 
 # Upgrade tmux plugins
 mkdir -p $TMUX_PLUGINS_DIR
@@ -91,12 +93,12 @@ fi
 
 # Sync console configs
 # FZF
-if [ ! -d $HOME/.fzf ]; then
-  git clone --depth 1 https://github.com/junegunn/fzf.git $HOME/.fzf
-  yes | $HOME/.fzf/install
-else
-  cd ~/.fzf && git pull && yes | $HOME/.fzf/install
-fi
+#if [ ! -d $HOME/.fzf ]; then
+#  git clone --depth 1 https://github.com/junegunn/fzf.git $HOME/.fzf
+#  yes | $HOME/.fzf/install
+#else
+#  cd ~/.fzf && git pull && yes | $HOME/.fzf/install
+#fi
 
 # SSH
 [ ! -d ~/.ssh/ ] && mkdir -p ~/.ssh/ && ssh-keygen
