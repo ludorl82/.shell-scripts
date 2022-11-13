@@ -15,7 +15,7 @@ elif [[ "$CLIENT" = "terminal" ]]; then
   if [[ "$(tmux ls | grep terminal-ssh | wc -l)" -eq "0" ]]; then
     tmux new-session -d -s terminal-ssh 'ssh -o StrictHostKeyChecking=no 172.17.0.1'
     sleep 2
-    tmux send-keys -t terminal-ssh "export DISPLAY=':10.0'" ENTER
+    tmux send-keys -t terminal-ssh 'export DISPLAY=$(cd /tmp/.X11-unix && for x in X*; do echo ":${x#X}"; done | tail -n1)' ENTER
   fi
   echo -n "$string" > /home/ludorl82/tmp/terminal-ssh
   tmux send-keys -t terminal-ssh "ssh -o StrictHostKeyChecking=no -p2222 localhost cat /home/ludorl82/tmp/terminal-ssh | xclip -selection clipboard" ENTER
