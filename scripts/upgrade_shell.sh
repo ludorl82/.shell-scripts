@@ -129,3 +129,4 @@ cp $CONFIGS_DIR/.console.gitconfig $HOME/.gitconfig
 # Bash for zsh console
 cp $CONFIGS_DIR/.console.bashrc $HOME/.bashrc
 cp $CONFIGS_DIR/.console.inputrc $HOME/.inputrc
+cp $CONFIGS_DIR/.console.fzf.bash $HOME/.fzf.bash
