@@ -113,7 +113,7 @@ pip3 install --user virtualenvwrapper
 # Install node and npm https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-ubuntu-18-04
 cd
 if [ ! -f nodesource_setup.sh ]; then
-  curl -sL https://deb.nodesource.com/setup_17.x -o nodesource_setup.sh
+  curl -sL https://deb.nodesource.com/setup_18.x -o nodesource_setup.sh
   sudo bash nodesource_setup.sh
   sudo apt install nodejs
   sudo apt install build-essential
