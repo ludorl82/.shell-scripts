@@ -13,7 +13,7 @@ mkdir -p $VIM_PLUGINS_DIR
 cd $VIM_PLUGINS_DIR
 [ ! -d $VIM_PLUGINS_DIR/awesome-vim-colorschemes ] && git clone https://github.com/rafi/awesome-vim-colorschemes.git
 [ ! -d $VIM_PLUGINS_DIR/coc.nvim ] && git clone https://github.com/neoclide/coc.nvim.git
-#[ ! -d $VIM_PLUGINS_DIR/fzf.vim ] && git clone https://github.com/junegunn/fzf.vim.git
+[ ! -d $VIM_PLUGINS_DIR/fzf.vim ] && git clone https://github.com/junegunn/fzf.vim.git
 [ ! -d $VIM_PLUGINS_DIR/nerdtree ] && git clone https://github.com/preservim/nerdtree.git
 [ ! -d $VIM_PLUGINS_DIR/vim-airline ] && git clone https://github.com/vim-airline/vim-airline.git
 [ ! -d $VIM_PLUGINS_DIR/vim-devicons ] && git clone https://github.com/ryanoasis/vim-devicons.git
@@ -34,7 +34,7 @@ yarn build
 mkdir -p $ZSH_PLUGINS_DIR
 cd $ZSH_PLUGINS_DIR
 [ ! -d $ZSH_PLUGINS_DIR/fzf ] && git clone https://github.com/junegunn/fzf.git
-#[ ! -d $ZSH_PLUGINS_DIR/zsh-vi-mode ] && git clone https://github.com/jeffreytse/zsh-vi-mode.git
+[ ! -d $ZSH_PLUGINS_DIR/zsh-vi-mode ] && git clone https://github.com/jeffreytse/zsh-vi-mode.git
 [ ! -d $ZSH_PLUGINS_DIR/zsh-kubectl-prompt ] && git clone https://github.com/superbrothers/zsh-kubectl-prompt.git
 [ ! -d $ZSH_PLUGINS_DIR/zsh-autocomplete ] && git clone https://github.com/marlonrichert/zsh-autocomplete.git
 [ ! -d $ZSH_PLUGINS_DIR/zsh-syntax-highlighting ] && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git
@@ -77,28 +77,42 @@ rsync -avh "$CONFIGS_DIR/.console.config/tmuxinator/" $HOME/.config/tmuxinator -
 # Ensure SSH configs are done
 SSHD_CONFIG="/etc/ssh/sshd_config"
 SSH_CONFIG1="X11Forwarding yes"
-SSH_CONFIG2="AcceptEnv LANG LC_* ENV CLIENT"
+SSH_CONFIG2="X11DisplayOffset 10"
+SSH_CONFIG3="X11UseLocalhost no"
+SSH_CONFIG4="AcceptEnv LANG LC_* ENV CLIENT DISPLAY"
 if [[ "$(grep "^$SSH_CONFIG1" $SSHD_CONFIG | wc -l)" == "0" ]]; then
   echo "${SSH_CONFIG1}" | sudo tee -a $SSHD_CONFIG
   echo Just applied $SSH_CONFIG1
 else
   echo $SSH_CONFIG1 already configured
 fi
-if [[ "$(grep "${SSH_CONFIG2:20}" $SSHD_CONFIG | wc -l)" = "0" ]]; then
+if [[ "$(grep "^${SSH_CONFIG2}" $SSHD_CONFIG | wc -l)" = "0" ]]; then
   echo "${SSH_CONFIG2}" | sudo tee -a $SSHD_CONFIG
   echo Just applied $SSH_CONFIG2
 else
   echo $SSH_CONFIG2 already configured
 fi
+if [[ "$(grep "^${SSH_CONFIG3}" $SSHD_CONFIG | wc -l)" = "0" ]]; then
+  echo "${SSH_CONFIG3}" | sudo tee -a $SSHD_CONFIG
+  echo Just applied $SSH_CONFIG3
+else
+  echo $SSH_CONFIG3 already configured
+fi
+if [[ "$(grep "${SSH_CONFIG4:38}" $SSHD_CONFIG | wc -l)" = "0" ]]; then
+  echo "${SSH_CONFIG4}" | sudo tee -a $SSHD_CONFIG
+  echo Just applied $SSH_CONFIG4
+else
+  echo $SSH_CONFIG4 already configured
+fi
 
 # Sync console configs
 # FZF
-#if [ ! -d $HOME/.fzf ]; then
-#  git clone --depth 1 https://github.com/junegunn/fzf.git $HOME/.fzf
-#  yes | $HOME/.fzf/install
-#else
-#  cd ~/.fzf && git pull && yes | $HOME/.fzf/install
-#fi
+if [ ! -d $HOME/.fzf ]; then
+  git clone --depth 1 https://github.com/junegunn/fzf.git $HOME/.fzf
+  yes | $HOME/.fzf/install
+else
+  cd ~/.fzf && git pull && yes | $HOME/.fzf/install
+fi
 
 # SSH
 [ ! -d ~/.ssh/ ] && mkdir -p ~/.ssh/ && ssh-keygen
