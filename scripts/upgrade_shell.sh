@@ -14,6 +14,7 @@ cd $VIM_PLUGINS_DIR
 [ ! -d $VIM_PLUGINS_DIR/awesome-vim-colorschemes ] && git clone https://github.com/rafi/awesome-vim-colorschemes.git
 [ ! -d $VIM_PLUGINS_DIR/coc.nvim ] && git clone https://github.com/neoclide/coc.nvim.git
 [ ! -d $VIM_PLUGINS_DIR/copilot.vim ] && git clone https://github.com/github/copilot.vim
+[ ! -d $VIM_PLUGINS_DIR/CopilotChat.nvim ] && git clone https://github.com/gptlang/CopilotChat.nvim
 [ ! -d $VIM_PLUGINS_DIR/fzf.vim ] && git clone https://github.com/junegunn/fzf.vim.git
 [ ! -d $VIM_PLUGINS_DIR/nerdtree ] && git clone https://github.com/preservim/nerdtree.git
 [ ! -d $VIM_PLUGINS_DIR/vim-airline ] && git clone https://github.com/vim-airline/vim-airline.git
@@ -24,6 +25,11 @@ cd $VIM_PLUGINS_DIR
 [ ! -d $VIM_PLUGINS_DIR/vim-terraform ] && git clone https://github.com/hashivim/vim-terraform.git
 [ ! -d $VIM_PLUGINS_DIR/vim-tmux-navigator ] && git clone https://github.com/christoomey/vim-tmux-navigator.git
 find $VIM_PLUGINS_DIR -mindepth 1 -maxdepth 1 -type d -exec git --git-dir={}/.git --work-tree={} pull \;
+
+# Upgrade CopilotChat
+cd $VIM_PLUGINS_DIR/CopilotChat.nvim
+cp -r --backup=nil rplugin ~/.config/nvim/
+pip install -r requirements.txt
 
 # Sync nvim configs
 rsync -avh "${CONFIGS_DIR}/.console.config/nvim/" $HOME/.config/nvim
