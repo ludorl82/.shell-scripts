@@ -29,6 +29,7 @@ find $VIM_PLUGINS_DIR -mindepth 1 -maxdepth 1 -type d -exec git --git-dir={}/.gi
 rsync -avh "${CONFIGS_DIR}/.console.config/nvim/" $HOME/.config/nvim
 
 cd ~/.config/nvim/pack/bundle/start/coc.nvim/
+npm i --save esbuild
 yarn install
 yarn build
 
