@@ -16,7 +16,6 @@ cd $VIM_PLUGINS_DIR
 [ ! -d $VIM_PLUGINS_DIR/copilot.vim ] && git clone https://github.com/github/copilot.vim
 [ ! -d $VIM_PLUGINS_DIR/CopilotChat.nvim ] && git clone https://github.com/gptlang/CopilotChat.nvim
 [ ! -d $VIM_PLUGINS_DIR/fzf.vim ] && git clone https://github.com/junegunn/fzf.vim.git
-[ ! -d $VIM_PLUGINS_DIR/nerdtree ] && git clone https://github.com/preservim/nerdtree.git
 [ ! -d $VIM_PLUGINS_DIR/vim-airline ] && git clone https://github.com/vim-airline/vim-airline.git
 [ ! -d $VIM_PLUGINS_DIR/vim-devicons ] && git clone https://github.com/ryanoasis/vim-devicons.git
 [ ! -d $VIM_PLUGINS_DIR/vim-fugitive ] && git clone https://github.com/tpope/vim-fugitive.git
