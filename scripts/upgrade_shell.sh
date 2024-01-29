@@ -74,6 +74,7 @@ DOCKER_GID=999
 
 # Print the start of the script and current environment information
 echo -e "\n\n==================== Script Start ====================\n\n"
+sudo echo "Script started with sudo privileges."
 echo "User: $USER"
 echo "Working Directory: $PWD"
 echo "Shell: $SHELL"
