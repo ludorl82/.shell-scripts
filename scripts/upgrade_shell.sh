@@ -59,7 +59,7 @@ SSHD_CONFIG="/etc/ssh/sshd_config"
 # SSH_CONFIGS: Array of SSH configurations to be applied.
 
 ZSH_FILES=("zshrc.zsh" "Linux.zsh" "aliases.zsh" "fzf.zsh" "ludorl82.zsh" "bindings.zsh")
-TMUX_FILES=("tmux.conf" "tmux.console.conf" "tmux.keys.conf" "tmux.Linux.conf" "gitmux.conf")
+TMUX_FILES=("tmux.conf" "tmux.keys.conf")
 SSH_CONFIGS=(
     "X11Forwarding yes"
     "X11DisplayOffset 10"
