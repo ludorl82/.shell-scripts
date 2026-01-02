@@ -1,26 +1,80 @@
 #!/bin/bash
 
-# Script: upgrade_shell.sh
-# Purpose: This script automates the setup of a development environment with various tools and configurations.
+################################################################################
+# Shell Environment Upgrade Script
+################################################################################
+#
+# Description:
+#   This script automates the setup and upgrade of a comprehensive development
+#   environment with various tools, plugins, and configurations for Vim/Neovim,
+#   Zsh, Tmux, and other development tools.
+#
+# Usage:
+#   ./upgrade_shell.sh
+#
+#   After script completes, log out and back in (or start a new shell session)
+#   for all changes to take effect.
+#
+# What it does:
+#   1. Clones/updates Git repositories for Vim/Neovim plugins
+#   2. Clones/updates Zsh plugins and themes
+#   3. Clones/updates Tmux plugins
+#   4. Syncs configuration files for Vim/Neovim, Zsh, Tmux, and Git
+#   5. Installs and builds coc.nvim for Neovim
+#   6. Upgrades CopilotChat for AI-assisted coding
+#   7. Sets up SSH configurations and keys
+#   8. Configures Docker group permissions
+#   9. Installs FZF (fuzzy finder)
+#   10. Creates symbolic links for all configuration files
+#
+# Requirements:
+#   - Root/sudo access
+#   - Internet connection
+#   - Git installed
+#   - The following must exist:
+#     * $HOME/.shell-configs repository (cloned from github.com/ludorl82)
+#     * $HOME/.shell-scripts repository (cloned from github.com/ludorl82)
+#   - For full functionality:
+#     * Node.js and npm (for coc.nvim)
+#     * Yarn (for coc.nvim)
+#     * Python and pip (for CopilotChat)
+#     * Zsh shell
+#     * Tmux
+#     * Neovim
+#
+################################################################################
 
-# The script performs the following operations:
-# 1. Clones or pulls the latest versions of various git repositories.
-# 2. Copies configuration files.
-# 3. Creates symbolic links.
-# 4. Installs and builds coc.nvim.
-# 5. Sets up gitconfig.
-# 6. Copies Xauthority for sudo vim.
-# 7. Sets permissions for special tools.
-# 8. Syncs Tmuxinator configs.
-# 9. Applies SSH configurations.
-# 10. Creates SSH keys and imports an authorized key.
-# 11. Installs FZF.
+# Detect OS
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    OS=$ID
+    OS_VERSION=$VERSION_ID
+else
+    echo "Cannot detect OS"
+    exit 1
+fi
 
-# Usage Instructions:
-# Execute this script from the command line using the following command:
-# ./upgrade_shell.sh
+# Detect architecture
+ARCH=$(dpkg --print-architecture)
 
-# Define directories and files
+# Validate OS
+if [[ "$OS" != "ubuntu" && "$OS" != "debian" ]]; then
+    echo "Error: This script only supports Ubuntu and Debian"
+    echo "Detected OS: $OS"
+    exit 1
+fi
+
+# Validate architecture
+if [[ "$ARCH" != "amd64" && "$ARCH" != "arm64" ]]; then
+    echo "Error: This script only supports amd64 and arm64 architectures"
+    echo "Detected architecture: $ARCH"
+    exit 1
+fi
+
+################################################################################
+# Directory and File Variables
+################################################################################
+
 # Directory Variables:
 # CONFIGS_DIR: Directory where configuration files are located.
 # SCRIPTS_DIR: Directory where scripts are located.
@@ -72,7 +126,10 @@ SSH_CONFIGS=(
 
 DOCKER_GID=999
 
-# Print the start of the script and current environment information
+################################################################################
+# Script Start - Environment Information
+################################################################################
+
 echo -e "\n\n==================== Script Start ====================\n\n"
 sudo echo "Script started with sudo privileges."
 echo "User: $USER"
@@ -81,9 +138,14 @@ echo "Shell: $SHELL"
 echo "Terminal: $TERM"
 echo "Date: $(date)"
 echo "Hostname: $(hostname)"
-echo "Operating System: $(uname -a)"
+echo "Operating System: $OS $OS_VERSION"
+echo "Architecture: $ARCH"
 echo "Kernel: $(uname -r)"
-echo "Distribution: $(lsb_release -a)"
+
+# Only run lsb_release if available (some minimal Debian installs may not have it)
+if command -v lsb_release &> /dev/null; then
+    echo "Distribution: $(lsb_release -a 2>/dev/null | grep Description | cut -f2)"
+fi
 
 # Print the variables that were previously defined
 echo -e "\n\n==================== Printing Directory Variables ====================\n\n"
@@ -111,6 +173,9 @@ echo "SSH_CONFIGS: ${SSH_CONFIGS[@]}"
 echo -e "\n\n==================== Printing Other Variables ====================\n\n"
 echo "DOCKER_GID: $DOCKER_GID"
 
+################################################################################
+# Helper Functions
+################################################################################
 
 # Function to clone or pull git repositories
 upgrade_git_repos() {
@@ -213,6 +278,10 @@ change_docker_gid() {
     fi
 }
 
+################################################################################
+# Main Script Execution
+################################################################################
+
 # Upgrade vim plugins
 echo -e "\n\n==================== Upgrading vim plugins ====================\n\n"
 upgrade_git_repos $VIM_PLUGINS_DIR \
@@ -280,10 +349,10 @@ echo "Setting up gitconfig"
 cp $CONFIGS_DIR/.console.gitconfig ~/.gitconfig
 
 echo "Copying Xauthority for sudo vim"
-sudo cp $HOME/.Xauthority /root/.Xauthority
+sudo cp $HOME/.Xauthority /root/.Xauthority 2>/dev/null || echo "Xauthority not found, skipping..."
 
 echo "Setting permissions for ip manipulation"
-sudo chmod u+s /sbin/ip
+sudo chmod u+s /sbin/ip 2>/dev/null || sudo chmod u+s /usr/sbin/ip 2>/dev/null || echo "ip command not found at expected locations"
 
 echo "Syncing Tmuxinator configs"
 rsync -avh "$CONFIGS_DIR/.console.config/tmuxinator/" $HOME/.config/tmuxinator --delete
@@ -312,4 +381,5 @@ echo -e "\n\n==================== Changing Docker GID inside container and addin
 change_docker_gid
 sudo usermod -aG docker $USER
 
-echo "Script completed."
+echo -e "\n\n==================== Script Completed ====================\n\n"
+echo "Please log out and back in (or start a new shell session) for all changes to take effect."
