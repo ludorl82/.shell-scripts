@@ -1,7 +1,19 @@
-# Shell Scripts
+# Bootstrapping the Shell
 
-The shell is an Ubuntu 20.04 VMware virtual machine with docker to run the console and all tools to work in the terminal.
+This section bootstraps a Linux system with shell configurations, Docker, and essential packages.
 
-The console is a so-called terminal running in a docker container with access to its host docker socket to run other docker containers with specific tools (ie ansible, terraform, kubectl).
+## Compatible Operating Systems
+- Ubuntu (20.04 LTS, 22.04 LTS, 24.04 LTS, and newer)
+- Debian (11 Bullseye, 12 Bookworm, and newer)
 
-Termux is an exploratory solution for working from Android devices.
+## Supported Architectures
+- amd64 (x86_64)
+- arm64 (aarch64) - including Raspberry Pi 4/5
+
+## Run installation
+To bootstrap the shell, please run the following command:
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/ludorl82/.shell-scripts/master/bootstrap-shell/bootstrap_shell.sh)"
+```
+
+After installation completes, log out and back in (or reboot) for all changes to take effect.
