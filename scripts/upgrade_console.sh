@@ -55,16 +55,12 @@ SSHD_CONFIG="/etc/ssh/sshd_config"
 # Array Variables:
 # ZSH_FILES: Array of Zsh configuration files to be copied and linked.
 # TMUX_FILES: Array of Tmux configuration files to be copied and linked.
-# SSH_CONFIGS: Array of SSH configurations to be applied.
+# SSH_CONFIGS: Array of SSH configurations to be applied (defined in
+#   upgrade_shell_functions.sh, the single source of truth shared with
+#   install_ssh.sh).
 
 ZSH_FILES=("zshrc.zsh" "bindings.zsh" "zshenv")
 TMUX_FILES=("tmux.conf" "tmux.keys.conf")
-SSH_CONFIGS=(
-    "X11Forwarding yes"
-    "X11DisplayOffset 10"
-    "X11UseLocalhost no"
-    "AcceptEnv LANG LC_* ENV CLIENT DISPLAY"
-)
 
 # Other Variables:
 # DOCKER_GID: Group ID of the Docker group.
@@ -162,9 +158,7 @@ echo -e "
 ==================== Applying each SSH config ====================
 
 "
-for config in "${SSH_CONFIGS[@]}"; do
-    apply_ssh_config "${config}"
-done
+apply_all_ssh_configs
 
 # Create SSH keys and import authorized key
 echo -e "

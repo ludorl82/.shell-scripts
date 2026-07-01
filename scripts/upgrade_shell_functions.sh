@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# Canonical list of sshd_config lines needed across all scripts.
+# Single source of truth -- do not duplicate this list elsewhere.
+SSH_CONFIGS=(
+    "X11Forwarding yes"
+    "X11DisplayOffset 10"
+    "X11UseLocalhost no"
+    "AcceptEnv LANG LC_* ENV CLIENT DISPLAY"
+)
+
 # Print the start of the script and current environment information
 echo -e "
 
@@ -115,6 +124,13 @@ apply_ssh_config() {
     else
         echo "${config} already configured"
     fi
+}
+
+# Apply every entry in SSH_CONFIGS, skipping any already present
+apply_all_ssh_configs() {
+    for config in "${SSH_CONFIGS[@]}"; do
+        apply_ssh_config "${config}"
+    done
 }
 
 # Function to create SSH keys and import authorized key
