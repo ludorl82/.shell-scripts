@@ -2,10 +2,17 @@
 
 display="$1"
 
-if [ "$display" == "" ]; then echo "Display $display cannot be empty" && exit 1; fi
+if [ -z "$display" ]; then
+  echo "Display $display cannot be empty"
+  exit 1
+fi
 
-[[ "$ENV" == "console" ]] && [[ "$display" == "console" ]] && tmuxinator $display && exit 0;
-[[ "$ENV" == "console" ]] && [[ "$display" == "ide" ]]     && tmuxinator $display && exit 0;
-[[ "$ENV" == "console" ]] && echo "Env: $ENV cannot open display: $display" && exit 1
+if [ "$ENV" != "console" ]; then
+  echo "Invalid env: $ENV"
+  exit 1
+fi
 
-echo "Invalid env: $ENV" && exit 1
+case "$display" in
+  console|ide) exec tmuxinator "$display" ;;
+  *) echo "Env: $ENV cannot open display: $display"; exit 1 ;;
+esac
