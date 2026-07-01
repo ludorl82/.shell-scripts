@@ -27,29 +27,7 @@
 #
 ################################################################################
 
-# Detect OS
-if [ -f /etc/os-release ]; then
-    . /etc/os-release
-    OS=$ID
-else
-    echo "Cannot detect OS"
-    exit 1
-fi
-
-# Detect architecture
-ARCH=$(dpkg --print-architecture)
-
-# Validate OS
-if [[ "$OS" != "ubuntu" && "$OS" != "debian" ]]; then
-    echo "This script only supports Ubuntu and Debian"
-    exit 1
-fi
-
-# Validate architecture
-if [[ "$ARCH" != "amd64" && "$ARCH" != "arm64" ]]; then
-    echo "This script only supports amd64 and arm64 architectures"
-    exit 1
-fi
+source "$(dirname "${BASH_SOURCE[0]}")/detect_os.sh"
 
 echo "Detected OS: $OS"
 echo "Detected Architecture: $ARCH"
