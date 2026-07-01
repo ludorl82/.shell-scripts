@@ -21,6 +21,11 @@ set -euo pipefail
 # Execute this script from the command line using the following command:
 # ./upgrade_console.sh
 
+# Prints a banner heading to visually separate each step's output.
+section() {
+    echo -e "\n\n==================== $1 ====================\n\n"
+}
+
 # Define directories and files
 # Directory Variables:
 # CONFIGS_DIR: Directory where configuration files are located.
@@ -71,11 +76,7 @@ DOCKER_GID=124
 source $SCRIPTS_DIR/upgrade_shell_functions.sh
 
 # Print the start of the script and current environment information
-echo -e "
-
-==================== Script Start ====================
-
-"
+section "Script Start"
 
 # Prompt for sudo to avoid prompt later
 sudo echo "Sudo acquired."
@@ -91,11 +92,7 @@ echo "Kernel: $(uname -r)"
 echo "Distribution: $(lsb_release -a)"
 
 # Print the variables that were previously defined
-echo -e "
-
-==================== Printing Directory Variables ====================
-
-"
+section "Printing Directory Variables"
 echo "CONFIGS_DIR: $CONFIGS_DIR"
 echo "SCRIPTS_DIR: $SCRIPTS_DIR"
 echo "ZSH_DIR: $ZSH_DIR"
@@ -107,36 +104,20 @@ echo "FZF_DIR: $FZF_DIR"
 echo "COC_NVIM_DIR: $COC_NVIM_DIR"
 echo "SSH_DIR: $SSH_DIR"
 
-echo -e "
-
-==================== Printing File Variables ====================
-
-"
+section "Printing File Variables"
 echo "AUTHORIZED_KEYS_FILE: $AUTHORIZED_KEYS_FILE"
 echo "SSHD_CONFIG: $SSHD_CONFIG"
 
-echo -e "
-
-==================== Printing Array Variables ====================
-
-"
+section "Printing Array Variables"
 echo "ZSH_FILES: ${ZSH_FILES[@]}"
 echo "TMUX_FILES: ${TMUX_FILES[@]}"
 echo "SSH_CONFIGS: ${SSH_CONFIGS[@]}"
 
-echo -e "
-
-==================== Printing Other Variables ====================
-
-"
+section "Printing Other Variables"
 echo "DOCKER_GID: $DOCKER_GID"
 
 # Upgrade zsh plugins
-echo -e "
-
-==================== Upgrading zsh plugins ====================
-
-"
+section "Upgrading zsh plugins"
 upgrade_git_repos $ZSH_PLUGINS_DIR \
     https://github.com/junegunn/fzf.git \
     https://github.com/jeffreytse/zsh-vi-mode.git \
@@ -146,59 +127,35 @@ upgrade_git_repos $ZSH_PLUGINS_DIR \
     https://github.com/zsh-users/zsh-autosuggestions.git
 
 # Upgrade zsh themes
-echo -e "
-
-==================== Upgrading zsh themes ====================
-
-"
+section "Upgrading zsh themes"
 upgrade_git_repos $ZSH_THEMES_DIR \
     https://github.com/agnoster/agnoster-zsh-theme.git
 
 # Upgrade tmux plugins
 # NOTE: tmux-themepack is not a plugin, but a collection of themes for tmux
-echo -e "
-
-==================== Upgrading tmux plugins ====================
-
-"
+section "Upgrading tmux plugins"
 upgrade_git_repos $TMUX_PLUGINS_DIR \
     https://github.com/jimeh/tmux-themepack.git \
     https://github.com/tmux-plugins/tmux-yank.git
 
 # Sync nvim configs
-echo -e "
-
-==================== Syncing nvim configs ====================
-
-"
+section "Syncing nvim configs"
 rsync -avh "${CONFIGS_DIR}/.console.config/nvim/" $HOME/.config/nvim
 
 # Copy ZSH configs and create symbolic links
-echo -e "
-
-==================== Copying ZSH configs and creating symbolic links ====================
-
-"
+section "Copying ZSH configs and creating symbolic links"
 copy_files_and_create_symlinks $CONFIGS_DIR $ZSH_DIR ZSH_FILES[@] "."
 # Copy Tmux configs and create symbolic links
 copy_files_and_create_symlinks $CONFIGS_DIR $TMUX_DIR TMUX_FILES[@] "."
 
 # Bash for zsh console
-echo -e "
-
-==================== Bash for zsh console ====================
-
-"
+section "Bash for zsh console"
 cp $CONFIGS_DIR/.console.bashrc ~/.bashrc
 cp $CONFIGS_DIR/.console.bash_profile ~/.bash_profile
 cp $CONFIGS_DIR/.console.aliases.sh ~/.aliases.sh
 cp $CONFIGS_DIR/.console.inputrc ~/.inputrc
 
-echo -e "
-
-==================== Applying various configs ====================
-
-"
+section "Applying various configs"
 echo "Setting up gitconfig"
 cp $CONFIGS_DIR/.console.gitconfig ~/.gitconfig
 
@@ -219,37 +176,21 @@ echo "Creating tmp directory if not exists"
 mkdir -p $HOME/tmp
 
 # Apply each SSH config
-echo -e "
-
-==================== Applying each SSH config ====================
-
-"
+section "Applying each SSH config"
 apply_all_ssh_configs
 
 # Create SSH keys and import authorized key
-echo -e "
-
-==================== Creating SSH keys and importing authorized key ====================
-
-"
+section "Creating SSH keys and importing authorized key"
 create_ssh_keys_and_import_authorized_key
 
 # Upgrade FZF
-echo -e "
-
-==================== Upgrading FZF ====================
-
-"
+section "Upgrading FZF"
 upgrade_git_repos $FZF_DIR https://github.com/junegunn/fzf.git
 echo "Installing FZF..."
 yes | $FZF_DIR/fzf/install
 
 # Change Docker GID inside container and add user to docker group
-echo -e "
-
-==================== Changing Docker GID inside container and adding user to docker group ====================
-
-"
+section "Changing Docker GID inside container and adding user to docker group"
 change_docker_gid
 sudo usermod -aG docker $USER
 
