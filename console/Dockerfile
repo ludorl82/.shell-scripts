@@ -1,7 +1,6 @@
 FROM ludorl82/console:v1.1.0
 
 ARG USER
-ARG PASS
 ARG UID=1000
 ARG GID=1000
 
@@ -26,6 +25,12 @@ RUN set -eux; \
     fi; \
     # Ensure home directory exists and has correct ownership
     mkdir -p /home/"$USER"; \
-    chown -R "$USER":"$USER" /home/"$USER"; \
-    # Set password
-    echo "$USER:$PASS" | chpasswd
+    chown -R "$USER":"$USER" /home/"$USER"
+
+# Retain USER at runtime (ARGs aren't available in the running container) so
+# entrypoint.sh knows which account to set the password for.
+ENV CONSOLE_USER=${USER}
+
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

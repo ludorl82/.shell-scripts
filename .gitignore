@@ -1,3 +1,5 @@
 build-tools/tmp
+.env
+console/.env
 scripts/vmotion/relocate_vm.py
 scripts/vmotion/pyvm*

@@ -6,6 +6,8 @@ services:
       args:
         USER: ${USER}
     image: ludorl82/console:latest
+    environment:
+      - PASS=${PASS:-}
     ports:
       - "2222:22"
     volumes:
