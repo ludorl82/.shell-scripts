@@ -37,6 +37,8 @@
 #
 ################################################################################
 
+set -euo pipefail
+
 # Detect OS
 if [ -f /etc/os-release ]; then
     . /etc/os-release

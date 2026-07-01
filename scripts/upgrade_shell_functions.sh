@@ -9,68 +9,6 @@ SSH_CONFIGS=(
     "AcceptEnv LANG LC_* ENV CLIENT DISPLAY"
 )
 
-# Print the start of the script and current environment information
-echo -e "
-
-==================== Script Start ====================
-
-"
-
-# Prompt for sudo to avoid prompt later
-sudo echo "Sudo acquired."
-
-echo "User: $USER"
-echo "Working Directory: $PWD"
-echo "Shell: $SHELL"
-echo "Terminal: $TERM"
-echo "Date: $(date)"
-echo "Hostname: $(hostname)"
-echo "Operating System: $(uname -a)"
-echo "Kernel: $(uname -r)"
-echo "Distribution: $(lsb_release -a)"
-
-# Print the variables that were previously defined
-echo -e "
-
-==================== Printing Directory Variables ====================
-
-"
-echo "CONFIGS_DIR: $CONFIGS_DIR"
-echo "SCRIPTS_DIR: $SCRIPTS_DIR"
-echo "ZSH_DIR: $ZSH_DIR"
-echo "ZSH_PLUGINS_DIR: $ZSH_PLUGINS_DIR"
-echo "ZSH_THEMES_DIR: $ZSH_THEMES_DIR"
-echo "TMUX_DIR: $TMUX_DIR"
-echo "TMUX_PLUGINS_DIR: $TMUX_PLUGINS_DIR"
-echo "FZF_DIR: $FZF_DIR"
-echo "COC_NVIM_DIR: $COC_NVIM_DIR"
-echo "SSH_DIR: $SSH_DIR"
-
-echo -e "
-
-==================== Printing File Variables ====================
-
-"
-echo "AUTHORIZED_KEYS_FILE: $AUTHORIZED_KEYS_FILE"
-echo "SSHD_CONFIG: $SSHD_CONFIG"
-
-echo -e "
-
-==================== Printing Array Variables ====================
-
-"
-echo "ZSH_FILES: ${ZSH_FILES[@]}"
-echo "TMUX_FILES: ${TMUX_FILES[@]}"
-echo "SSH_CONFIGS: ${SSH_CONFIGS[@]}"
-
-echo -e "
-
-==================== Printing Other Variables ====================
-
-"
-echo "DOCKER_GID: $DOCKER_GID"
-
-
 # Function to clone or pull git repositories
 upgrade_git_repos() {
     local dir=$1
@@ -152,14 +90,15 @@ create_ssh_keys_and_import_authorized_key() {
 
 # Function to change Docker GID inside container
 change_docker_gid() {
-    # Get the current GID of the docker group
-    current_docker_gid=$(getent group docker | cut -d: -f3)
+    # Get the current GID of the docker group (empty if the group doesn't exist yet)
+    current_docker_gid=$(getent group docker | cut -d: -f3) || true
 
     # Check if DOCKER_GID is set and not equal to the current GID
     if [ -n "$DOCKER_GID" ] && [ "$DOCKER_GID" != "$current_docker_gid" ]; then
         # Check if docker group exists
         if getent group docker >/dev/null; then
-            sudo gpasswd -d $USER docker
+            # Fails harmlessly if the user isn't currently a member
+            sudo gpasswd -d $USER docker || true
             echo "Changing Docker GID to $DOCKER_GID..."
             sudo groupmod -g "$DOCKER_GID" docker
         else

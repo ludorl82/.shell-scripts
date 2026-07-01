@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 string="$(</dev/stdin)"
 [[ -z "$string" ]] && string="$(tmux save-buffer -)"

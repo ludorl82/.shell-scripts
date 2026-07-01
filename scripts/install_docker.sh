@@ -27,6 +27,8 @@
 #
 ################################################################################
 
+set -euo pipefail
+
 source "$(dirname "${BASH_SOURCE[0]}")/detect_os.sh"
 
 echo "Detected OS: $OS"

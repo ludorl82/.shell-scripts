@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # Script: upgrade_console.sh
 # Purpose: This script automates the setup of a development environment with various tools and configurations.
@@ -68,6 +69,67 @@ TMUX_FILES=("tmux.conf" "tmux.keys.conf")
 DOCKER_GID=124
 
 source $SCRIPTS_DIR/upgrade_shell_functions.sh
+
+# Print the start of the script and current environment information
+echo -e "
+
+==================== Script Start ====================
+
+"
+
+# Prompt for sudo to avoid prompt later
+sudo echo "Sudo acquired."
+
+echo "User: $USER"
+echo "Working Directory: $PWD"
+echo "Shell: $SHELL"
+echo "Terminal: $TERM"
+echo "Date: $(date)"
+echo "Hostname: $(hostname)"
+echo "Operating System: $(uname -a)"
+echo "Kernel: $(uname -r)"
+echo "Distribution: $(lsb_release -a)"
+
+# Print the variables that were previously defined
+echo -e "
+
+==================== Printing Directory Variables ====================
+
+"
+echo "CONFIGS_DIR: $CONFIGS_DIR"
+echo "SCRIPTS_DIR: $SCRIPTS_DIR"
+echo "ZSH_DIR: $ZSH_DIR"
+echo "ZSH_PLUGINS_DIR: $ZSH_PLUGINS_DIR"
+echo "ZSH_THEMES_DIR: $ZSH_THEMES_DIR"
+echo "TMUX_DIR: $TMUX_DIR"
+echo "TMUX_PLUGINS_DIR: $TMUX_PLUGINS_DIR"
+echo "FZF_DIR: $FZF_DIR"
+echo "COC_NVIM_DIR: $COC_NVIM_DIR"
+echo "SSH_DIR: $SSH_DIR"
+
+echo -e "
+
+==================== Printing File Variables ====================
+
+"
+echo "AUTHORIZED_KEYS_FILE: $AUTHORIZED_KEYS_FILE"
+echo "SSHD_CONFIG: $SSHD_CONFIG"
+
+echo -e "
+
+==================== Printing Array Variables ====================
+
+"
+echo "ZSH_FILES: ${ZSH_FILES[@]}"
+echo "TMUX_FILES: ${TMUX_FILES[@]}"
+echo "SSH_CONFIGS: ${SSH_CONFIGS[@]}"
+
+echo -e "
+
+==================== Printing Other Variables ====================
+
+"
+echo "DOCKER_GID: $DOCKER_GID"
 
 # Upgrade zsh plugins
 echo -e "
@@ -141,7 +203,11 @@ echo "Setting up gitconfig"
 cp $CONFIGS_DIR/.console.gitconfig ~/.gitconfig
 
 echo "Copying Xauthority for sudo vim"
-sudo cp $HOME/.Xauthority /root/.Xauthority
+if [ -f "$HOME/.Xauthority" ]; then
+    sudo cp $HOME/.Xauthority /root/.Xauthority
+else
+    echo "No .Xauthority found (no X session), skipping"
+fi
 
 echo "Setting permissions for ip manipulation"
 sudo chmod u+s /sbin/ip
