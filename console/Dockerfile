@@ -4,6 +4,33 @@ ARG USER
 ARG UID=1000
 ARG GID=1000
 
+# Install GitHub CLI (gh) from its official apt repo
+RUN set -eux; \
+    (type -p wget >/dev/null || (apt-get update && apt-get install -y wget)); \
+    mkdir -p -m 755 /etc/apt/keyrings; \
+    wget -nv -O /etc/apt/keyrings/githubcli-archive-keyring.gpg https://cli.github.com/packages/githubcli-archive-keyring.gpg; \
+    chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg; \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list; \
+    apt-get update; \
+    apt-get install -y gh; \
+    rm -rf /var/lib/apt/lists/*
+
+# Install AWS CLI v2 (official installer, arch-aware)
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends unzip curl; \
+    ARCH=$(dpkg --print-architecture); \
+    case "$ARCH" in \
+      amd64) AWS_ARCH=x86_64 ;; \
+      arm64) AWS_ARCH=aarch64 ;; \
+      *) echo "Unsupported architecture: $ARCH" >&2; exit 1 ;; \
+    esac; \
+    curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-${AWS_ARCH}.zip" -o /tmp/awscliv2.zip; \
+    unzip -q /tmp/awscliv2.zip -d /tmp; \
+    /tmp/aws/install; \
+    rm -rf /tmp/awscliv2.zip /tmp/aws; \
+    rm -rf /var/lib/apt/lists/*
+
 # Remove or rename existing ubuntu user and group if they exist
 # Then create new user with the specified name
 RUN set -eux; \
