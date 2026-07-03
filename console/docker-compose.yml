@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
       args:
         USER: ${USER}
-    image: ludorl82/console:latest
+    image: ludorl82/console-personal:latest
     environment:
       - PASS=${PASS:-}
     ports:

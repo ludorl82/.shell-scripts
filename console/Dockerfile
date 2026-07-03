@@ -1,4 +1,4 @@
-FROM ludorl82/console:v1.1.0
+FROM ludorl82/console:latest
 
 ARG USER
 ARG UID=1000

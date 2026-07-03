@@ -21,19 +21,19 @@
 #   - Sets timezone to America/Montreal
 #   - Installs essential system packages and utilities
 #   - Enables and starts Docker service
-#   - Builds and starts Docker containers from ~/git/console
+#   - Builds and starts the personalized console container from
+#     ~/.shell-scripts/console (layers gh/aws/user setup on top of the
+#     ludorl82/console:latest base image pulled from Docker Hub)
 #
 # Requirements:
 #   - Root/sudo access
 #   - Internet connection
 #   - Git installed
-#   - ~/git/console directory with docker-compose.yml
 #
 # Prerequisites:
 #   The following must exist before running this script:
 #   - GitHub repositories: ludorl82/.shell-configs and ludorl82/.shell-scripts
 #   - $HOME/.shell-scripts/scripts/install_docker.sh
-#   - $HOME/git/console/docker-compose.yml (or compose.yaml)
 #
 ################################################################################
 
@@ -123,23 +123,26 @@ sudo systemctl enable docker
 sudo systemctl start docker
 echo ""
 
-if [[ -d ~/git/console ]]; then
-    echo "Building and starting Docker containers..."
-    cd ~/git/console
-    
+if [[ -d "$HOME/.shell-scripts/console" ]]; then
+    echo "Building and starting the personalized console container..."
+    cd "$HOME/.shell-scripts/console"
+
     # Check if docker-compose or docker compose is available
     if command -v docker-compose &> /dev/null; then
         COMPOSE_CMD="docker-compose"
     else
         COMPOSE_CMD="docker compose"
     fi
-    
+
+    # --pull so the ludorl82/console:latest base is re-checked against
+    # Docker Hub every bootstrap, not just built from a stale local cache.
     /usr/bin/newgrp docker <<EONG
+$COMPOSE_CMD build --pull
 $COMPOSE_CMD up -d
 EONG
     echo ""
 else
-    echo "Warning: ~/git/console directory not found. Skipping Docker container setup."
+    echo "Warning: $HOME/.shell-scripts/console directory not found. Skipping Docker container setup."
     echo ""
 fi
 
