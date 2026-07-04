@@ -4,32 +4,11 @@ ARG USER
 ARG UID=1000
 ARG GID=1000
 
-# Install GitHub CLI (gh) from its official apt repo
-RUN set -eux; \
-    (type -p wget >/dev/null || (apt-get update && apt-get install -y wget)); \
-    mkdir -p -m 755 /etc/apt/keyrings; \
-    wget -nv -O /etc/apt/keyrings/githubcli-archive-keyring.gpg https://cli.github.com/packages/githubcli-archive-keyring.gpg; \
-    chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg; \
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list; \
-    apt-get update; \
-    apt-get install -y gh; \
-    rm -rf /var/lib/apt/lists/*
-
-# Install AWS CLI v2 (official installer, arch-aware)
-RUN set -eux; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends unzip curl; \
-    ARCH=$(dpkg --print-architecture); \
-    case "$ARCH" in \
-      amd64) AWS_ARCH=x86_64 ;; \
-      arm64) AWS_ARCH=aarch64 ;; \
-      *) echo "Unsupported architecture: $ARCH" >&2; exit 1 ;; \
-    esac; \
-    curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-${AWS_ARCH}.zip" -o /tmp/awscliv2.zip; \
-    unzip -q /tmp/awscliv2.zip -d /tmp; \
-    /tmp/aws/install; \
-    rm -rf /tmp/awscliv2.zip /tmp/aws; \
-    rm -rf /var/lib/apt/lists/*
+# GitHub CLI (gh) and AWS CLI v2 are provisioned by devcontainer Features
+# (github-cli, aws-cli) -- see .devcontainer/devcontainer.json. Building this
+# Dockerfile directly with `docker build`/`docker compose build` (bypassing
+# the devcontainer CLI) skips those Features; use `devcontainer build` for a
+# complete image.
 
 # Remove or rename existing ubuntu user and group if they exist
 # Then create new user with the specified name
@@ -55,12 +34,11 @@ RUN set -eux; \
     chown -R "$USER":"$USER" /home/"$USER"
 
 # Retain USER at runtime (ARGs aren't available in the running container) so
-# entrypoint.sh knows which account to set the password for.
+# entrypoint.sh knows which account to set the password for. Overrides the
+# base image's own CONSOLE_USER=ubuntu.
 ENV CONSOLE_USER=${USER}
 
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-
-# Default command
-CMD ["/usr/sbin/sshd", "-D", "-o", "ListenAddress=0.0.0.0"]
+# entrypoint.sh, ENTRYPOINT and CMD are inherited from ludorl82/console --
+# no need to redeclare them here, and doing so would risk silently
+# overwriting the base's entrypoint.sh (e.g. its docker-init.sh chaining)
+# with a stale local copy.

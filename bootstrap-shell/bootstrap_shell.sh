@@ -21,9 +21,10 @@
 #   - Sets timezone to America/Montreal
 #   - Installs essential system packages and utilities
 #   - Enables and starts Docker service
-#   - Builds and starts the personalized console container from
-#     ~/.shell-scripts/console (layers gh/aws/user setup on top of the
-#     ludorl82/console:latest base image pulled from Docker Hub)
+#   - Builds (via the devcontainer CLI, so its gh/aws Features actually
+#     apply) and starts the personalized console container from
+#     ~/.shell-scripts/console, layered on top of the ludorl82/console:latest
+#     base image pulled from Docker Hub
 #
 # Requirements:
 #   - Root/sudo access
@@ -114,7 +115,7 @@ if [[ "$OS" == "debian" && "$OS_VERSION" == "11" ]] || [[ "$OS" == "ubuntu" && "
 fi
 
 sudo apt install -y openssh-server iftop mtr telnet squid \
-                    ruby-full $DOCKER_COMPOSE_PKG
+                    ruby-full nodejs npm $DOCKER_COMPOSE_PKG
 echo ""
 
 # Build docker images
@@ -134,10 +135,14 @@ if [[ -d "$HOME/.shell-scripts/console" ]]; then
         COMPOSE_CMD="docker compose"
     fi
 
-    # --pull so the ludorl82/console:latest base is re-checked against
-    # Docker Hub every bootstrap, not just built from a stale local cache.
+    # Plain `docker compose build` skips this image's devcontainer Features
+    # (github-cli, aws-cli) -- build through the devcontainer CLI instead,
+    # which applies them and re-pulls the ludorl82/console:latest base
+    # fresh from Docker Hub every time, then let compose just run the
+    # already-tagged image.
+    export GID="$(id -g)"
     /usr/bin/newgrp docker <<EONG
-$COMPOSE_CMD build --pull
+npx --yes @devcontainers/cli build --workspace-folder . --image-name ludorl82/console-personal:latest
 $COMPOSE_CMD up -d
 EONG
     echo ""
