@@ -32,6 +32,7 @@ section() {
 # SCRIPTS_DIR: Directory where scripts are located.
 # ZSH_DIR: Directory where Zsh configuration files are located.
 # ZSH_PLUGINS_DIR: Directory where Zsh plugins are stored.
+# ZSH_THEMES_DIR: Directory where Zsh themes are stored.
 # TMUX_DIR: Directory where Tmux configuration files are located.
 # TMUX_PLUGINS_DIR: Directory where Tmux plugins are stored.
 # FZF_DIR: Directory where FZF is installed.
@@ -43,6 +44,7 @@ SCRIPTS_DIR="$HOME/.shell-scripts/scripts"
 VIM_CONFIG_DIR="$HOME/.config/nvim"
 ZSH_DIR="$HOME/.zsh"
 ZSH_PLUGINS_DIR="$ZSH_DIR/plugins"
+ZSH_THEMES_DIR="$ZSH_DIR/themes"
 TMUX_DIR=$HOME/.tmux
 TMUX_PLUGINS_DIR=$TMUX_DIR/plugins
 FZF_DIR="$HOME/.fzf"
@@ -95,6 +97,7 @@ echo "CONFIGS_DIR: $CONFIGS_DIR"
 echo "SCRIPTS_DIR: $SCRIPTS_DIR"
 echo "ZSH_DIR: $ZSH_DIR"
 echo "ZSH_PLUGINS_DIR: $ZSH_PLUGINS_DIR"
+echo "ZSH_THEMES_DIR: $ZSH_THEMES_DIR"
 echo "TMUX_DIR: $TMUX_DIR"
 echo "TMUX_PLUGINS_DIR: $TMUX_PLUGINS_DIR"
 echo "FZF_DIR: $FZF_DIR"
@@ -123,17 +126,17 @@ upgrade_git_repos $ZSH_PLUGINS_DIR \
     https://github.com/zsh-users/zsh-syntax-highlighting.git \
     https://github.com/zsh-users/zsh-autosuggestions.git
 
+# Upgrade zsh themes
+section "Upgrading zsh themes"
+upgrade_git_repos $ZSH_THEMES_DIR \
+    https://github.com/agnoster/agnoster-zsh-theme.git
+
 # Upgrade tmux plugins
 # NOTE: tmux-themepack is not a plugin, but a collection of themes for tmux
 section "Upgrading tmux plugins"
 upgrade_git_repos $TMUX_PLUGINS_DIR \
     https://github.com/jimeh/tmux-themepack.git \
-    https://github.com/tmux-plugins/tmux-yank.git \
-    https://github.com/arcticicestudio/nord-tmux.git
-
-# Install Starship prompt (installs to ~/.local/bin, no sudo needed)
-section "Installing Starship prompt"
-curl -sS https://starship.rs/install.sh | sh -s -- -b "$HOME/.local/bin" -y
+    https://github.com/tmux-plugins/tmux-yank.git
 
 # Sync nvim configs
 section "Syncing nvim configs"
@@ -155,10 +158,6 @@ cp $CONFIGS_DIR/.console.inputrc ~/.inputrc
 section "Applying various configs"
 echo "Setting up gitconfig"
 cp $CONFIGS_DIR/.console.gitconfig ~/.gitconfig
-
-echo "Setting up Starship config"
-mkdir -p ~/.config
-cp $CONFIGS_DIR/.console.starship.toml ~/.config/starship.toml
 
 echo "Copying Xauthority for sudo vim"
 if [ -f "$HOME/.Xauthority" ]; then
