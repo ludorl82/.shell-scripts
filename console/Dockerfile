@@ -31,7 +31,11 @@ RUN set -eux; \
     fi; \
     # Ensure home directory exists and has correct ownership
     mkdir -p /home/"$USER"; \
-    chown -R "$USER":"$USER" /home/"$USER"
+    chown -R "$USER":"$USER" /home/"$USER"; \
+    # Passwordless sudo for this user
+    echo "$USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/nopasswd-"$USER"; \
+    chmod 0440 /etc/sudoers.d/nopasswd-"$USER"; \
+    visudo -cf /etc/sudoers.d/nopasswd-"$USER"
 
 # Retain USER at runtime (ARGs aren't available in the running container) so
 # entrypoint.sh knows which account to set the password for. Overrides the
