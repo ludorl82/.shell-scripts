@@ -65,7 +65,7 @@ SSHD_CONFIG="/etc/ssh/sshd_config"
 #   upgrade_shell_functions.sh, the single source of truth shared with
 #   install_ssh.sh).
 
-ZSH_FILES=("zshrc.zsh" "bindings.zsh" "zshenv")
+ZSH_FILES=("zshrc.zsh" "bindings.zsh" "zshenv" "p10k.zsh")
 TMUX_FILES=("tmux.conf" "tmux.keys.conf")
 
 # Other Variables:
@@ -129,7 +129,7 @@ upgrade_git_repos $ZSH_PLUGINS_DIR \
 # Upgrade zsh themes
 section "Upgrading zsh themes"
 upgrade_git_repos $ZSH_THEMES_DIR \
-    https://github.com/agnoster/agnoster-zsh-theme.git
+    https://github.com/romkatv/powerlevel10k.git
 
 # Upgrade tmux plugins
 # NOTE: tmux-themepack is not a plugin, but a collection of themes for tmux
