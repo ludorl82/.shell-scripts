@@ -135,7 +135,11 @@ upgrade_git_repos $ZSH_THEMES_DIR \
 # NOTE: tmux-themepack is not a plugin, but a collection of themes for tmux
 section "Upgrading tmux plugins"
 upgrade_git_repos $TMUX_PLUGINS_DIR \
-    https://github.com/jimeh/tmux-themepack.git \
+    https://github.com/jimeh/tmux-themepack.git
+
+# NOTE: tmux-yank is expected directly under $TMUX_DIR (not $TMUX_PLUGINS_DIR)
+# by tmux.conf's run-shell path.
+upgrade_git_repos $TMUX_DIR \
     https://github.com/tmux-plugins/tmux-yank.git
 
 # Sync nvim configs
