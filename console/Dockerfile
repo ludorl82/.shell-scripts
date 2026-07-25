@@ -4,11 +4,11 @@ ARG USER
 ARG UID=1000
 ARG GID=1000
 
-# GitHub CLI (gh) and AWS CLI v2 are provisioned by devcontainer Features
-# (github-cli, aws-cli) -- see .devcontainer/devcontainer.json. Building this
-# Dockerfile directly with `docker build`/`docker compose build` (bypassing
-# the devcontainer CLI) skips those Features; use `devcontainer build` for a
-# complete image.
+# All tooling (gh, aws, tofu) is installed via plain RUN steps below -- no
+# devcontainer Features. An earlier revision provisioned gh/aws through
+# Features, which meant a plain `docker build`/`docker compose build` silently
+# produced an image without them; anything the image needs now lives in this
+# file, and any builder yields a complete image.
 
 # Trust the internal private CA so curl/Python/Node inside the container verify
 # internal TLS hosts for real, instead of needing verify=False / ignoreTls.
@@ -25,19 +25,35 @@ RUN rm -f /usr/local/share/ca-certificates/.gitkeep; \
     chmod 0644 /usr/local/share/ca-certificates/*.crt 2>/dev/null || true; \
     update-ca-certificates
 
-# OpenTofu (not a devcontainer Feature: there is no official one, and the
-# Terraform Feature installs Terraform, not this fork -- the aws-iac and
-# cloudflare-iac repos are pinned to OpenTofu specifically for its native S3
-# state locking, which needs >=1.10). Installed here via RUN rather than a
-# Feature so it is present even on a plain `docker build`/`docker compose
-# build`, which -- per the note above -- already skips the gh/aws-cli
-# Features.
+# GitHub CLI, from its official apt repo (per cli/cli install_linux.md).
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+      -o /etc/apt/keyrings/githubcli-archive-keyring.gpg && \
+    chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+      > /etc/apt/sources.list.d/github-cli.list && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends gh && \
+    rm -rf /var/lib/apt/lists/*
+
+# AWS CLI v2, from the official zip installer (there is no apt package for v2).
+# $(uname -m) resolves to x86_64 / aarch64, matching Amazon's artifact names,
+# so this works for both architectures of the base image.
+RUN cd /tmp && \
+    curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o awscliv2.zip && \
+    unzip -q awscliv2.zip && \
+    ./aws/install && \
+    rm -rf awscliv2.zip aws && \
+    aws --version
+
+# OpenTofu, via its official installer script (the aws-iac and cloudflare-iac
+# repos are pinned to OpenTofu, not Terraform, for its native S3 state locking,
+# which needs >=1.10).
 #
-# Uses the official installer script rather than a hand-rolled apt-repo/gpg
-# setup -- an earlier version of this step hardcoded those URLs from memory
-# and got the repo signing-key URL wrong (get.opentofu.org/opentofu-repo.gpg
-# does not exist; the real one is packages.opentofu.org/opentofu/tofu/gpgkey).
-# Letting upstream's own script own those details avoids repeating that.
+# The script is used rather than a hand-rolled apt-repo/gpg setup -- an earlier
+# version of this step hardcoded those URLs from memory and got the repo
+# signing-key URL wrong (get.opentofu.org/opentofu-repo.gpg does not exist; the
+# real one is packages.opentofu.org/opentofu/tofu/gpgkey). Letting upstream's
+# own script own those details avoids repeating that.
 RUN curl -fsSL https://get.opentofu.org/install-opentofu.sh -o /tmp/install-opentofu.sh && \
     chmod +x /tmp/install-opentofu.sh && \
     /tmp/install-opentofu.sh --install-method deb && \

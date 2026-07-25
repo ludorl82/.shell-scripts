@@ -23,10 +23,10 @@
 #   - Enables and starts Docker service
 #   - Stages any private CA certs into the console build context
 #     (see CONSOLE_CA_CERT below); skipped with a warning if none found
-#   - Builds (via the devcontainer CLI, so its gh/aws Features actually
-#     apply) and starts the personalized console container from
+#   - Builds and starts the personalized console container from
 #     ~/.shell-scripts/console, layered on top of the ludorl82/console:latest
-#     base image pulled from Docker Hub
+#     base image pulled from Docker Hub (plain compose build -- all tooling
+#     is in the Dockerfile itself, no devcontainer Features)
 #
 # Optional environment:
 #   CONSOLE_CA_CERT - path to a private CA's *public* cert to trust inside the
@@ -178,14 +178,19 @@ if [[ -d "$HOME/.shell-scripts/console" ]]; then
         COMPOSE_CMD="docker compose"
     fi
 
-    # Plain `docker compose build` skips this image's devcontainer Features
-    # (github-cli, aws-cli) -- build through the devcontainer CLI instead,
-    # which applies them and re-pulls the ludorl82/console:latest base
-    # fresh from Docker Hub every time, then let compose just run the
-    # already-tagged image.
-    export GID="$(id -g)"
+    # Everything the image needs is now in the Dockerfile (gh, aws, tofu as
+    # plain RUN steps -- no devcontainer Features), so an ordinary compose
+    # build produces a complete image. --pull refreshes the
+    # ludorl82/console:latest base from Docker Hub, which the devcontainer
+    # CLI used to do implicitly.
+    #
+    # DOCKER_BUILDKIT=0: BuildKit's isolated build network has broken DNS on
+    # at least one fleet host (coquille, observed 2026-07-25 -- RUN steps
+    # cannot resolve any hostname; plain `docker run` and the legacy builder
+    # are unaffected). Drop this once that is fixed at the host level.
+    export UID GID="$(id -g)"
     /usr/bin/newgrp docker <<EONG
-npx --yes @devcontainers/cli build --workspace-folder . --image-name ludorl82/console-personal:latest
+DOCKER_BUILDKIT=0 $COMPOSE_CMD build --pull
 $COMPOSE_CMD up -d
 EONG
     echo ""
