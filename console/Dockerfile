@@ -25,6 +25,17 @@ RUN rm -f /usr/local/share/ca-certificates/.gitkeep; \
     chmod 0644 /usr/local/share/ca-certificates/*.crt 2>/dev/null || true; \
     update-ca-certificates
 
+# kubectl, from the official release binaries. It was never in this image
+# before 2026-07-25 — it had been installed by hand in the running container,
+# which the first image-recreate silently wiped. TARGETARCH (amd64/arm64)
+# matches dl.k8s.io's artifact naming directly.
+ARG TARGETARCH
+RUN KVER="$(curl -fsSL https://dl.k8s.io/release/stable.txt)" && \
+    curl -fsSL -o /usr/local/bin/kubectl \
+      "https://dl.k8s.io/release/${KVER}/bin/linux/${TARGETARCH:-$(dpkg --print-architecture)}/kubectl" && \
+    chmod +x /usr/local/bin/kubectl && \
+    kubectl version --client >/dev/null
+
 # GitHub CLI, from its official apt repo (per cli/cli install_linux.md).
 RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
       -o /etc/apt/keyrings/githubcli-archive-keyring.gpg && \
