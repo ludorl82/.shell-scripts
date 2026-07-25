@@ -21,10 +21,18 @@
 #   - Sets timezone to America/Montreal
 #   - Installs essential system packages and utilities
 #   - Enables and starts Docker service
+#   - Stages any private CA certs into the console build context
+#     (see CONSOLE_CA_CERT below); skipped with a warning if none found
 #   - Builds (via the devcontainer CLI, so its gh/aws Features actually
 #     apply) and starts the personalized console container from
 #     ~/.shell-scripts/console, layered on top of the ludorl82/console:latest
 #     base image pulled from Docker Hub
+#
+# Optional environment:
+#   CONSOLE_CA_CERT - path to a private CA's *public* cert to trust inside the
+#     console container. Defaults to the local CAs this host already trusts
+#     (/usr/local/share/ca-certificates/*.crt). Certs are never committed --
+#     this repo is public.
 #
 # Requirements:
 #   - Root/sudo access
@@ -125,6 +133,41 @@ sudo systemctl start docker
 echo ""
 
 if [[ -d "$HOME/.shell-scripts/console" ]]; then
+    # Stage any private CA certs into the image build context, so the container
+    # trusts internal TLS hosts instead of needing verify=False. The certs are
+    # not in git (this repo is public), so take them from this host: an explicit
+    # $CONSOLE_CA_CERT if set, otherwise whatever local CAs the host itself
+    # already trusts. Missing is not fatal -- the build then just yields an
+    # image without that trust.
+    echo "Staging private CA certs into the console build context..."
+    CA_DEST="$HOME/.shell-scripts/console/ca-certs"
+    CA_HOST_STORE="/usr/local/share/ca-certificates"
+    mkdir -p "$CA_DEST"
+    rm -f "$CA_DEST"/*.crt
+    ca_staged=0
+    for ca_src in "${CONSOLE_CA_CERT:-}" "$CA_HOST_STORE"/*.crt; do
+        [[ -n "$ca_src" && -f "$ca_src" ]] || continue
+        # Never stage a file carrying key material: it would stay readable in
+        # the image and travel with every push of it.
+        if grep -q "PRIVATE KEY" "$ca_src"; then
+            echo "  Refusing $(basename "$ca_src") -- it contains a private key."
+            continue
+        fi
+        if command -v openssl >/dev/null && ! openssl x509 -in "$ca_src" -noout 2>/dev/null; then
+            echo "  Skipping $(basename "$ca_src") -- not a readable certificate."
+            continue
+        fi
+        install -m 0644 "$ca_src" "$CA_DEST/$(basename "$ca_src")"
+        echo "  Staged $(basename "$ca_src")"
+        ca_staged=$((ca_staged + 1))
+    done
+    if [[ "$ca_staged" -eq 0 ]]; then
+        echo "  Warning: no private CA cert found on this host."
+        echo "  The console container will not trust internal TLS hosts."
+        echo "  Set CONSOLE_CA_CERT=/path/to/ca.crt and re-run to add one."
+    fi
+    echo ""
+
     echo "Building and starting the personalized console container..."
     cd "$HOME/.shell-scripts/console"
 

@@ -1,5 +1,10 @@
 build-tools/tmp
 .env
 console/.env
+# Private CA certs -- kept out of this PUBLIC repo (internal PKI metadata).
+# bootstrap_shell.sh populates console/ca-certs/ from the host at build time;
+# the directory itself is tracked via its .gitkeep. See console/Dockerfile.
+console/*.crt
+console/ca-certs/*.crt
 scripts/vmotion/relocate_vm.py
 scripts/vmotion/pyvm*

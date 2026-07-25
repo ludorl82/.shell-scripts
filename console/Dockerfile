@@ -10,6 +10,21 @@ ARG GID=1000
 # the devcontainer CLI) skips those Features; use `devcontainer build` for a
 # complete image.
 
+# Trust the internal private CA so curl/Python/Node inside the container verify
+# internal TLS hosts for real, instead of needing verify=False / ignoreTls.
+#
+# The cert files are deliberately NOT committed (this repo is public and they
+# carry internal PKI metadata) -- console/ca-certs/*.crt is gitignored, and
+# bootstrap_shell.sh populates it from the host before building. The whole
+# directory is COPYed rather than a named file so the build still succeeds when
+# it holds nothing but .gitkeep; you just get an image without that trust.
+# Public certs only -- never put a private key in the build context, it stays
+# readable in the image and travels with every push of it.
+COPY ca-certs/ /usr/local/share/ca-certificates/
+RUN rm -f /usr/local/share/ca-certificates/.gitkeep; \
+    chmod 0644 /usr/local/share/ca-certificates/*.crt 2>/dev/null || true; \
+    update-ca-certificates
+
 # Remove or rename existing ubuntu user and group if they exist
 # Then create new user with the specified name
 RUN set -eux; \
