@@ -25,6 +25,25 @@ RUN rm -f /usr/local/share/ca-certificates/.gitkeep; \
     chmod 0644 /usr/local/share/ca-certificates/*.crt 2>/dev/null || true; \
     update-ca-certificates
 
+# OpenTofu (not a devcontainer Feature: there is no official one, and the
+# Terraform Feature installs Terraform, not this fork -- the aws-iac and
+# cloudflare-iac repos are pinned to OpenTofu specifically for its native S3
+# state locking, which needs >=1.10). Installed here via RUN rather than a
+# Feature so it is present even on a plain `docker build`/`docker compose
+# build`, which -- per the note above -- already skips the gh/aws-cli
+# Features.
+RUN curl -fsSL https://get.opentofu.org/opentofu.gpg -o /etc/apt/keyrings/opentofu.gpg && \
+    curl -fsSL https://get.opentofu.org/opentofu-repo.gpg -o /etc/apt/keyrings/opentofu-repo.gpg && \
+    chmod a+r /etc/apt/keyrings/opentofu.gpg /etc/apt/keyrings/opentofu-repo.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-repo.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main" \
+      > /etc/apt/sources.list.d/opentofu.list && \
+    echo "deb-src [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-repo.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main" \
+      >> /etc/apt/sources.list.d/opentofu.list && \
+    chmod a+r /etc/apt/sources.list.d/opentofu.list && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends tofu && \
+    rm -rf /var/lib/apt/lists/*
+
 # Remove or rename existing ubuntu user and group if they exist
 # Then create new user with the specified name
 RUN set -eux; \
