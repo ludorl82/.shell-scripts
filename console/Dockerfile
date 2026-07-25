@@ -32,16 +32,16 @@ RUN rm -f /usr/local/share/ca-certificates/.gitkeep; \
 # Feature so it is present even on a plain `docker build`/`docker compose
 # build`, which -- per the note above -- already skips the gh/aws-cli
 # Features.
-RUN curl -fsSL https://get.opentofu.org/opentofu.gpg -o /etc/apt/keyrings/opentofu.gpg && \
-    curl -fsSL https://get.opentofu.org/opentofu-repo.gpg -o /etc/apt/keyrings/opentofu-repo.gpg && \
-    chmod a+r /etc/apt/keyrings/opentofu.gpg /etc/apt/keyrings/opentofu-repo.gpg && \
-    echo "deb [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-repo.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main" \
-      > /etc/apt/sources.list.d/opentofu.list && \
-    echo "deb-src [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-repo.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main" \
-      >> /etc/apt/sources.list.d/opentofu.list && \
-    chmod a+r /etc/apt/sources.list.d/opentofu.list && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends tofu && \
+#
+# Uses the official installer script rather than a hand-rolled apt-repo/gpg
+# setup -- an earlier version of this step hardcoded those URLs from memory
+# and got the repo signing-key URL wrong (get.opentofu.org/opentofu-repo.gpg
+# does not exist; the real one is packages.opentofu.org/opentofu/tofu/gpgkey).
+# Letting upstream's own script own those details avoids repeating that.
+RUN curl -fsSL https://get.opentofu.org/install-opentofu.sh -o /tmp/install-opentofu.sh && \
+    chmod +x /tmp/install-opentofu.sh && \
+    /tmp/install-opentofu.sh --install-method deb && \
+    rm -f /tmp/install-opentofu.sh && \
     rm -rf /var/lib/apt/lists/*
 
 # Remove or rename existing ubuntu user and group if they exist
