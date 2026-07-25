@@ -13,6 +13,12 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker-host.sock"
       - "${HOME}:${HOME}"
+    # Backstop only: host has 1.8G RAM, so this leaves ~350M for the rest of
+    # the system. earlyoom is the primary protection; this just stops a
+    # runaway from taking the host down with it. Swap allowance above the
+    # limit lets zram absorb spikes before the cgroup kills anything.
+    mem_limit: 1500m
+    memswap_limit: 2400m
     restart: always
 
 networks:
