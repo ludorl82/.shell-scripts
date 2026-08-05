@@ -7,7 +7,14 @@ services:
         USER: ${USER}
         UID: ${UID:-1000}
         GID: ${GID:-1000}
-    image: ludorl82/console-personal:latest
+    # Override CONSOLE_IMAGE (e.g. in .env) to build/tag straight into a
+    # private registry; the default keeps a purely local image.
+    #
+    # NOTE: on a host whose init system manages this container (a declarative
+    # `oci-containers`-style unit), use this file for `build` ONLY — never
+    # `up`. Both would claim the same container name and port 2222, and the
+    # runtime settings below would silently diverge from the unit's.
+    image: ${CONSOLE_IMAGE:-ludorl82/console-personal:latest}
     environment:
       - PASS=${PASS:-}
     ports:
@@ -15,10 +22,11 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker-host.sock"
       - "${HOME}:${HOME}"
-    # Backstop only: host has 1.8G RAM, so this leaves ~350M for the rest of
-    # the system. earlyoom is the primary protection; this just stops a
-    # runaway from taking the host down with it. Swap allowance above the
-    # limit lets zram absorb spikes before the cgroup kills anything.
+    # Backstop only, sized for a ~2G single-board host: earlyoom (or the
+    # equivalent) is the primary protection, this just stops a runaway from
+    # taking the host down with it. The swap allowance above the limit lets
+    # zram absorb spikes before the cgroup kills anything. Raise both on a
+    # machine with real memory.
     mem_limit: 1500m
     memswap_limit: 2400m
     restart: always
