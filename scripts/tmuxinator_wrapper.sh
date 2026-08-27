@@ -15,5 +15,6 @@ fi
 
 case "$display" in
   console|ide) exec tmuxinator "$display" ;;
+  claude) exec tmux -L console attach -t claude ;;
   *) echo "Env: $ENV cannot open display: $display"; exit 1 ;;
 esac
