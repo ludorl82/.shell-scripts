@@ -46,6 +46,13 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
     apt-get install -y --no-install-recommends gh && \
     rm -rf /var/lib/apt/lists/*
 
+# Qwen Code, pinned: the nightly pipeline drives hosted Qwen models through
+# it (nixos-iac scripts/nightly-diagram-sync.sh, DIAGRAM_AUTHOR=qwen). Pinned
+# because its headless flags and its --bare tool set are what the pipeline
+# was measured against; a floating version would change the harness under
+# the job. Node comes from the base image.
+RUN npm install -g --no-fund --no-audit @qwen-code/qwen-code@0.23.3
+
 # AWS CLI v2, from the official zip installer (there is no apt package for v2).
 # $(uname -m) resolves to x86_64 / aarch64, matching Amazon's artifact names,
 # so this works for both architectures of the base image.
