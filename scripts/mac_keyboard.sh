@@ -116,9 +116,37 @@ else
     echo "  ! activateSettings introuvable, deconnecte-toi pour appliquer"
 fi
 
+section "Chrome: close tab on Control-Shift-W"
+# Chrome's OWN menu, so Chrome's own defaults domain -- not -g. As above the
+# binding matches the menu ITEM TITLE, but Chrome ships its own localisation
+# instead of using AppKit's, so the French title was read straight out of its
+# locale pak rather than guessed:
+#
+#   Contents/Frameworks/Google Chrome Framework.framework/Versions/*/
+#     Resources/fr.lproj/locale.pak  ->  "Fermer l'onglet"
+#
+# Plain ASCII apostrophe, NOT the typographic one -- the difference is
+# invisible on screen and would have made the binding silently never match.
+# The English title is bound too, so a work Mac in English gets it as well.
+#
+# THE TRADE, said out loud rather than discovered later: NSUserKeyEquivalents
+# REPLACES a menu item's shortcut, it does not add a second one. Command-W
+# stops closing tabs. That is deliberate here -- it mirrors the Windows
+# laptop, where Control-W was given to delete-word-backward and closing moved
+# to Control-Shift-W -- but removing one line below gives Command-W back.
+CHROME_CLOSE_TAB=("Close Tab" "Fermer l'onglet")
+for title in "${CHROME_CLOSE_TAB[@]}"; do
+    defaults write com.google.Chrome NSUserKeyEquivalents -dict-add "$title" '^$w'
+    printf '  « %s » -> Controle-Majuscule-W\n' "$title"
+done
+
 section "Readback"
+echo "  -- global"
 defaults read -g NSUserKeyEquivalents 2>/dev/null | sed 's/^/  /' \
     || echo "  ! rien n'a ete enregistre"
+echo "  -- Chrome"
+defaults read com.google.Chrome NSUserKeyEquivalents 2>/dev/null | sed 's/^/  /' \
+    || echo "  ! rien n'a ete enregistre pour Chrome"
 
 section "Done"
 cat <<'NOTE'
@@ -129,6 +157,10 @@ Si le raccourci de maximisation ne fait rien dans une application, c'est
 qu'elle n'a pas le menu Fenetre > Deplacer et redimensionner : les
 applications qui ne sont pas Cocoa, comme certaines fenetres Java ou X11,
 n'ont pas de menu a lier.
+
+Chrome doit etre RELANCE pour voir sa nouvelle liaison, et Commande-W ne
+fermera plus l'onglet : NSUserKeyEquivalents remplace le raccourci d'une
+entree de menu, il n'en ajoute pas un deuxieme.
 
 LES CINQ BUREAUX DOIVENT EXISTER. Ce script pose les raccourcis, il ne peut
 pas creer les bureaux : leur nombre appartient au Dock, et aucune preference
