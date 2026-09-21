@@ -121,6 +121,15 @@ else
 fi
 [ -x "$FZF_DIR/install" ] && "$FZF_DIR/install" --key-bindings --completion --no-update-rc
 
+section "macOS keyboard shortcuts"
+# Emacs editing keys and the maximize hotkey. Also sudo-free, so it belongs
+# in this script rather than in the bootstrap one.
+if [ -x "$SCRIPTS_DIR/scripts/mac_keyboard.sh" ]; then
+    "$SCRIPTS_DIR/scripts/mac_keyboard.sh" | sed 's/^/  /'
+else
+    echo "  ! scripts/mac_keyboard.sh introuvable"
+fi
+
 section "Tools present on this machine"
 for c in git zsh tmux nvim fzf kubectl aws gh jq rg asciinema alacritty; do
     printf "  %-12s %s\n" "$c" "$(command -v "$c" >/dev/null 2>&1 && echo present || echo ABSENT)"
