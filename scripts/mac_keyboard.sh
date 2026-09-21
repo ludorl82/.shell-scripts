@@ -32,6 +32,18 @@ set -euo pipefail
 # Usage:
 #   ./mac_keyboard.sh
 
+# home-manager's activation runs with a PATH that does NOT contain /usr/bin,
+# and everything this script drives -- sw_vers, defaults, plutil -- lives
+# only there. Seen for real on 2026-09-21, from a darwin-rebuild switch:
+#
+#   mac_keyboard.sh: line 54: sw_vers: command not found
+#   ! mac_keyboard.sh a echoue : raccourcis NON appliques
+#
+# So put the system paths back instead of hoping the caller supplied them.
+# Prepended, not appended: these are the macOS originals, and a nixpkgs
+# coreutils uname earlier on the path is fine but must not shadow them.
+PATH="/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+
 CONFIGS_REPO="https://github.com/ludorl82/.shell-configs.git"
 CONFIGS_DIR="$HOME/.shell-configs"
 DICT_SRC="$CONFIGS_DIR/.mac.DefaultKeyBinding.dict"
@@ -57,10 +69,15 @@ section "Emacs editing keys"
 if [ ! -f "$DICT_SRC" ]; then
     # Not fatal: a work Mac may block GitHub. Say so and keep going, the
     # menu shortcut below does not depend on the repository.
-    if [ -d "$CONFIGS_DIR/.git" ]; then
-        git -C "$CONFIGS_DIR" pull --ff-only >/dev/null 2>&1 || true
-    else
-        git clone --depth 1 "$CONFIGS_REPO" "$CONFIGS_DIR" >/dev/null 2>&1 || true
+    # Guarded: on a Mac without the Xcode command line tools, /usr/bin/git is
+    # a stub that pops a GUI installer. During an activation that would hang
+    # the switch behind a dialog nobody is watching.
+    if command -v git >/dev/null 2>&1 && git --version >/dev/null 2>&1; then
+        if [ -d "$CONFIGS_DIR/.git" ]; then
+            git -C "$CONFIGS_DIR" pull --ff-only >/dev/null 2>&1 || true
+        else
+            git clone --depth 1 "$CONFIGS_REPO" "$CONFIGS_DIR" >/dev/null 2>&1 || true
+        fi
     fi
 fi
 if [ -f "$DICT_SRC" ]; then
