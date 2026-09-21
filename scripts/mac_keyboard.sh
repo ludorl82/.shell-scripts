@@ -85,6 +85,37 @@ for title in "${FILL_TITLES[@]}"; do
     echo "  « $title » -> $MAXIMIZE_KEY"
 done
 
+section "Five desktops on Control-Shift-1..5"
+# Mapping read out of Apple's OWN table, not guessed:
+#   KeyboardSettings.appex/Contents/Resources/DefaultSpacesShortcuts.xml
+#     Desktop 1..5 -> symbolic hotkey id 118..122
+#     keycodes        18  19  20  21  23   (note: 5 is 23, not 22)
+#     Apple's default modifier is 262144, Control alone.
+# We want Control+Shift, so 262144 + 131072 = 393216.
+#
+# The parameters array is (ASCII, keycode, modifiers). ASCII is 65535, which
+# means "none". Apple's table gives a keycode and a modifier and no character
+# at all, and with Shift held keycode 18 does not produce "1" anyway -- so
+# matching on the character would be wrong, not merely redundant.
+CTRL_SHIFT=$(( 262144 + 131072 ))
+DESKTOP_IDS=(118 119 120 121 122)
+DESKTOP_KEYS=(18 19 20 21 23)
+for i in 0 1 2 3 4; do
+    id="${DESKTOP_IDS[$i]}"
+    kc="${DESKTOP_KEYS[$i]}"
+    defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add "$id" \
+        "{ enabled = 1; value = { parameters = (65535, $kc, $CTRL_SHIFT); type = standard; }; }"
+    echo "  Bureau $(( i + 1 )) <- Controle-Majuscule-$(( i + 1 ))  (id $id, code $kc)"
+done
+
+ACTIVATE=/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings
+if [ -x "$ACTIVATE" ]; then
+    "$ACTIVATE" -u >/dev/null 2>&1 && echo "  reglages recharges sans deconnexion" \
+        || echo "  ! rechargement refuse, deconnecte-toi pour appliquer"
+else
+    echo "  ! activateSettings introuvable, deconnecte-toi pour appliquer"
+fi
+
 section "Readback"
 defaults read -g NSUserKeyEquivalents 2>/dev/null | sed 's/^/  /' \
     || echo "  ! rien n'a ete enregistre"
@@ -98,4 +129,11 @@ Si le raccourci de maximisation ne fait rien dans une application, c'est
 qu'elle n'a pas le menu Fenetre > Deplacer et redimensionner : les
 applications qui ne sont pas Cocoa, comme certaines fenetres Java ou X11,
 n'ont pas de menu a lier.
+
+LES CINQ BUREAUX DOIVENT EXISTER. Ce script pose les raccourcis, il ne peut
+pas creer les bureaux : leur nombre appartient au Dock, et aucune preference
+publique ne le fixe. Un raccourci vers un bureau absent ne fait simplement
+rien. Ouvre Mission Control (Controle-Fleche haut), clique le + en haut a
+droite jusqu'a en avoir cinq. C'est a faire une fois par machine, ils
+survivent aux redemarrages.
 NOTE
