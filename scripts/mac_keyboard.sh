@@ -110,20 +110,69 @@ section "Five desktops on Control-Shift-1..5"
 #     Apple's default modifier is 262144, Control alone.
 # We want Control+Shift, so 262144 + 131072 = 393216.
 #
-# The parameters array is (ASCII, keycode, modifiers). ASCII is 65535, which
-# means "none". Apple's table gives a keycode and a modifier and no character
-# at all, and with Shift held keycode 18 does not produce "1" anyway -- so
-# matching on the character would be wrong, not merely redundant.
+# WRITTEN AS XML, AND THAT IS THE WHOLE POINT. The short `defaults write`
+# syntax -- "{ enabled = 1; parameters = (49, 18, 393216); }" -- produces a
+# plist in which EVERY VALUE IS A STRING. WindowServer wants a boolean and
+# integers, so it ignores such an entry in complete silence: `defaults read`
+# shows exactly what you wrote, System Settings looks right, and not one key
+# does anything. Two evenings went into blaming the key codes for this.
+#
+# First parameter is the character code of the UNSHIFTED key, matching what
+# macOS writes for its own shortcuts: entry 51 is Command-Shift-` and stores
+# the same character code as entry 27, plain Command-`, so holding Shift does
+# not change it.
 CTRL_SHIFT=$(( 262144 + 131072 ))
 DESKTOP_IDS=(118 119 120 121 122)
 DESKTOP_KEYS=(18 19 20 21 23)
+DESKTOP_CHARS=(49 50 51 52 53)   # '1'..'5'
 for i in 0 1 2 3 4; do
-    id="${DESKTOP_IDS[$i]}"
-    kc="${DESKTOP_KEYS[$i]}"
-    defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add "$id" \
-        "{ enabled = 1; value = { parameters = (65535, $kc, $CTRL_SHIFT); type = standard; }; }"
-    echo "  Bureau $(( i + 1 )) <- Controle-Majuscule-$(( i + 1 ))  (id $id, code $kc)"
+    defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys \
+        -dict-add "${DESKTOP_IDS[$i]}" "
+<dict>
+  <key>enabled</key><true/>
+  <key>value</key>
+  <dict>
+    <key>parameters</key>
+    <array>
+      <integer>${DESKTOP_CHARS[$i]}</integer>
+      <integer>${DESKTOP_KEYS[$i]}</integer>
+      <integer>$CTRL_SHIFT</integer>
+    </array>
+    <key>type</key><string>standard</string>
+  </dict>
+</dict>"
+    echo "  Bureau $(( i + 1 )) <- Controle-Majuscule-$(( i + 1 ))  (id ${DESKTOP_IDS[$i]})"
 done
+
+# The guard for the bug above: a wrong TYPE reads back looking perfectly
+# correct, so check the type itself, not the value.
+if python3 - <<'CHECK'
+import plistlib, os, sys
+p = os.path.expanduser("~/Library/Preferences/com.apple.symbolichotkeys.plist")
+try:
+    d = plistlib.load(open(p, "rb"))["AppleSymbolicHotKeys"]
+except Exception as e:
+    print("    ! illisible:", e); sys.exit(1)
+bad = []
+for k in ("118", "119", "120", "121", "122"):
+    e = d.get(k)
+    if not e:
+        bad.append(f"{k} absent"); continue
+    if not isinstance(e.get("enabled"), bool):
+        bad.append(f"{k} enabled est {type(e['enabled']).__name__}, pas bool")
+    for v in e["value"]["parameters"]:
+        if not isinstance(v, int):
+            bad.append(f"{k} parametre {v!r} est {type(v).__name__}, pas int"); break
+if bad:
+    print("    ! TYPES INVALIDES, WindowServer les ignorera en silence :")
+    for b in bad: print("      -", b)
+    sys.exit(1)
+CHECK
+then
+    echo "  types verifies : booleen et entiers"
+else
+    echo "  ! les raccourcis de bureau ne prendront PAS effet"
+fi
 
 ACTIVATE=/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings
 if [ -x "$ACTIVATE" ]; then
