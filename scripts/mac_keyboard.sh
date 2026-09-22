@@ -285,6 +285,15 @@ qu'elle n'a pas le menu Fenetre > Deplacer et redimensionner : les
 applications qui ne sont pas Cocoa, comme certaines fenetres Java ou X11,
 n'ont pas de menu a lier.
 
+UNE SOURCE DE SAISIE AJOUTEE ICI N'EST PAS ENCORE ENREGISTREE. Ecrire
+AppleEnabledInputSources par defaults remplit la liste, et macOS la garde,
+mais le service de saisie ne relit cette liste qu'a l'OUVERTURE DE SESSION :
+tant qu'on ne s'est pas deconnecte, AppleSelectedInputSources reste vide, la
+disposition n'apparait pas dans le menu et Controle-Espace n'a rien entre
+quoi basculer. Deconnecte-toi et reconnecte-toi une fois apres le premier
+ajout. Les fois suivantes, l'entree etant deja la, le script ne touche a
+rien.
+
 Chrome doit etre RELANCE pour voir sa nouvelle liaison, et Commande-W ne
 fermera plus l'onglet : NSUserKeyEquivalents remplace le raccourci d'une
 entree de menu, il n'en ajoute pas un deuxieme.
