@@ -2,56 +2,55 @@
 set -euo pipefail
 
 # Script: mac_keyboard.sh
-# Purpose: macOS keyboard shortcuts -- Emacs editing keys, and a window
-# maximize hotkey -- applied identically on a personal and a work Mac.
+# Purpose: apply the keyboard configuration declared in
+#          .shell-configs/.mac.keyboard.json -- Emacs editing keys, menu
+#          shortcuts, system hotkeys and input sources -- identically on a
+#          personal and a work Mac.
 #
-# NO ADMINISTRATOR RIGHTS, on purpose, exactly like upgrade_mac.sh. Everything
-# it touches is a per-user preference: ~/Library/KeyBindings and the user's own
-# defaults domain. Nothing is installed system-wide and nothing calls sudo, so
-# this runs on a managed work Mac.
+# THE DATA IS NOT HERE. What the keyboard should be lives in the JSON file
+# above; this script only knows HOW to apply it, and carries the reasons each
+# step is written the awkward way it is. One declaration, two machines: the
+# personal Mac applies it at every darwin-rebuild, the work Mac when this is
+# run by hand or through upgrade_mac.sh.
 #
-# WHY NO RECTANGLE, MAGNET OR AMETHYST. macOS tiles windows natively since 15,
-# under Window > Move & Resize, and ANY menu item can be given a shortcut
-# through NSUserKeyEquivalents -- a plain user preference. So the maximize key
-# needs no third-party app, which a managed Mac may well refuse to install.
+# NO ADMINISTRATOR RIGHTS, on purpose. Everything touched is a per-user
+# preference. Nothing is installed, nothing calls sudo.
 #
-# THE MENU TITLE IS LOCALIZED, and the binding matches on the title, not on an
-# identifier. Read out of AppKit's MenuCommands.loctable:
+# FOUR TRAPS, each paid for in a real evening:
 #
-#     en      Fill
-#     fr      Remplir
-#     fr-CA   Remplissage
+# 1. PATH. home-manager's activation runs without /usr/bin, and sw_vers,
+#    defaults and plutil live only there. The script died on its first line
+#    of output until the system paths were put back below.
 #
-# All three are bound. A title that does not exist on this machine simply never
-# matches, so one file covers an English work Mac and a French personal one.
+# 2. PLIST TYPES. The short `defaults write` syntax -- "{ enabled = 1; }" --
+#    makes EVERY value a string. WindowServer wants a boolean and integers
+#    and ignores a string-typed entry in total silence: `defaults read` shows
+#    exactly what you wrote, System Settings looks right, no key does
+#    anything. Symbolic hotkeys are therefore written as XML, and verified by
+#    TYPE rather than by value, since a mistyped value reads back perfect.
 #
-# The Emacs keys themselves live in .shell-configs/.mac.DefaultKeyBinding.dict,
-# beside .laptop.bindings.ahk which does the same job under Windows. Only the
-# bindings macOS LACKS are declared there; see that file for which are native.
+# 3. LOCALISED MENU TITLES. A menu shortcut binds to the item's TITLE, which
+#    is translated, and Chrome ships its own translation rather than using
+#    AppKit's. Every spelling is declared in the JSON; one that does not
+#    exist simply never matches.
+#
+# 4. INPUT SOURCES NEED A LOGIN. Writing AppleEnabledInputSources fills the
+#    list and macOS keeps it, but the text input service only re-reads that
+#    list when a session opens. Until you log out and back in,
+#    AppleSelectedInputSources stays empty, the layout is absent from the
+#    menu, and Control-Space has nothing to switch between.
 #
 # Usage:
 #   ./mac_keyboard.sh
 
-# home-manager's activation runs with a PATH that does NOT contain /usr/bin,
-# and everything this script drives -- sw_vers, defaults, plutil -- lives
-# only there. Seen for real on 2026-09-21, from a darwin-rebuild switch:
-#
-#   mac_keyboard.sh: line 54: sw_vers: command not found
-#   ! mac_keyboard.sh a echoue : raccourcis NON appliques
-#
-# So put the system paths back instead of hoping the caller supplied them.
-# Prepended, not appended: these are the macOS originals, and a nixpkgs
-# coreutils uname earlier on the path is fine but must not shadow them.
+# See trap 1.
 PATH="/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 
 CONFIGS_REPO="https://github.com/ludorl82/.shell-configs.git"
 CONFIGS_DIR="$HOME/.shell-configs"
+DECL="$CONFIGS_DIR/.mac.keyboard.json"
 DICT_SRC="$CONFIGS_DIR/.mac.DefaultKeyBinding.dict"
 DICT_DST="$HOME/Library/KeyBindings/DefaultKeyBinding.dict"
-
-# Control + Option + Command + M. Same fingers as ^!#m on the Windows laptop.
-MAXIMIZE_KEY="^~@m"
-FILL_TITLES=("Fill" "Remplir" "Remplissage")
 
 section() {
     echo
@@ -65,27 +64,26 @@ section "Validating the machine"
 [ "$(id -u)" -ne 0 ] || { echo "Do not run this as root." >&2; exit 1; }
 echo "$(sw_vers -productName) $(sw_vers -productVersion) sur $(uname -m)"
 
-section "Emacs editing keys"
-if [ ! -f "$DICT_SRC" ]; then
-    # Not fatal: a work Mac may block GitHub. Say so and keep going, the
-    # menu shortcut below does not depend on the repository.
-    # Guarded: on a Mac without the Xcode command line tools, /usr/bin/git is
-    # a stub that pops a GUI installer. During an activation that would hang
-    # the switch behind a dialog nobody is watching.
-    if command -v git >/dev/null 2>&1 && git --version >/dev/null 2>&1; then
-        if [ -d "$CONFIGS_DIR/.git" ]; then
-            git -C "$CONFIGS_DIR" pull --ff-only >/dev/null 2>&1 || true
-        else
-            git clone --depth 1 "$CONFIGS_REPO" "$CONFIGS_DIR" >/dev/null 2>&1 || true
-        fi
+# Fetch the declaration if it is missing. Guarded: on a Mac without the Xcode
+# command line tools /usr/bin/git is a stub that opens a GUI installer, which
+# during an activation would hang the switch behind a dialog nobody watches.
+if [ ! -f "$DECL" ] && command -v git >/dev/null 2>&1 && git --version >/dev/null 2>&1; then
+    if [ -d "$CONFIGS_DIR/.git" ]; then
+        git -C "$CONFIGS_DIR" pull --ff-only >/dev/null 2>&1 || true
+    else
+        git clone --depth 1 "$CONFIGS_REPO" "$CONFIGS_DIR" >/dev/null 2>&1 || true
     fi
 fi
+[ -f "$DECL" ] || { echo "declaration absente : $DECL" >&2; exit 1; }
+echo "declaration : $DECL"
+
+section "Emacs editing keys"
 if [ -f "$DICT_SRC" ]; then
     mkdir -p "$(dirname "$DICT_DST")"
     cp "$DICT_SRC" "$DICT_DST"
     echo "  $DICT_DST"
-    # A malformed dict is ignored in silence by AppKit, which is the worst
-    # possible failure: the keys just do nothing and nothing says why.
+    # AppKit ignores a malformed dict in silence, which is the worst failure
+    # available: the keys do nothing and nothing says why.
     if plutil -lint "$DICT_DST" >/dev/null 2>&1; then
         echo "  syntaxe: valide"
     else
@@ -96,234 +94,153 @@ else
     echo "  ! $DICT_SRC absent, les touches d'edition ne sont pas posees"
 fi
 
-section "Window maximize on Control-Option-Command-M"
-for title in "${FILL_TITLES[@]}"; do
-    defaults write -g NSUserKeyEquivalents -dict-add "$title" "$MAXIMIZE_KEY"
-    echo "  « $title » -> $MAXIMIZE_KEY"
-done
+section "Applying the declaration"
+# errexit desactive le temps du bloc : on VEUT lire son code de retour et
+# continuer, pas mourir avant de l'avoir recupere.
+set +e
+python3 - "$DECL" <<'APPLY'
+import json, subprocess, sys
 
-section "Five desktops on Control-Shift-1..5"
-# Mapping read out of Apple's OWN table, not guessed:
-#   KeyboardSettings.appex/Contents/Resources/DefaultSpacesShortcuts.xml
-#     Desktop 1..5 -> symbolic hotkey id 118..122
-#     keycodes        18  19  20  21  23   (note: 5 is 23, not 22)
-#     Apple's default modifier is 262144, Control alone.
-# We want Control+Shift, so 262144 + 131072 = 393216.
-#
-# WRITTEN AS XML, AND THAT IS THE WHOLE POINT. The short `defaults write`
-# syntax -- "{ enabled = 1; parameters = (49, 18, 393216); }" -- produces a
-# plist in which EVERY VALUE IS A STRING. WindowServer wants a boolean and
-# integers, so it ignores such an entry in complete silence: `defaults read`
-# shows exactly what you wrote, System Settings looks right, and not one key
-# does anything. Two evenings went into blaming the key codes for this.
-#
-# First parameter is the character code of the UNSHIFTED key, matching what
-# macOS writes for its own shortcuts: entry 51 is Command-Shift-` and stores
-# the same character code as entry 27, plain Command-`, so holding Shift does
-# not change it.
-CTRL_SHIFT=$(( 262144 + 131072 ))
-DESKTOP_IDS=(118 119 120 121 122)
-DESKTOP_KEYS=(18 19 20 21 23)
-DESKTOP_CHARS=(49 50 51 52 53)   # '1'..'5'
-for i in 0 1 2 3 4; do
-    defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys \
-        -dict-add "${DESKTOP_IDS[$i]}" "
-<dict>
-  <key>enabled</key><true/>
-  <key>value</key>
-  <dict>
-    <key>parameters</key>
-    <array>
-      <integer>${DESKTOP_CHARS[$i]}</integer>
-      <integer>${DESKTOP_KEYS[$i]}</integer>
-      <integer>$CTRL_SHIFT</integer>
-    </array>
-    <key>type</key><string>standard</string>
-  </dict>
-</dict>"
-    echo "  Bureau $(( i + 1 )) <- Controle-Majuscule-$(( i + 1 ))  (id ${DESKTOP_IDS[$i]})"
-done
+MODS = {"shift": 131072, "control": 262144, "option": 524288, "command": 1048576}
+decl = json.load(open(sys.argv[1]))
+rc = 0
 
-# The guard for the bug above: a wrong TYPE reads back looking perfectly
-# correct, so check the type itself, not the value.
-if python3 - <<'CHECK'
-import plistlib, os, sys
-p = os.path.expanduser("~/Library/Preferences/com.apple.symbolichotkeys.plist")
+def defaults(*args):
+    return subprocess.run(["defaults", *args], capture_output=True, text=True)
+
+# --- menu shortcuts -------------------------------------------------------
+print("  raccourcis d'entrees de menu")
+for domain, titles in decl.get("menu_shortcuts", {}).items():
+    if domain.startswith("_"):
+        continue
+    target = "-g" if domain == "NSGlobalDomain" else domain
+    for title, combo in titles.items():
+        if title.startswith("_"):
+            continue
+        r = defaults("write", target, "NSUserKeyEquivalents", "-dict-add", title, combo)
+        if r.returncode:
+            print("    ! %s / %s : %s" % (domain, title, r.stderr.strip())); rc = 1
+        else:
+            print("    %-16s %-18s %s" % (domain, title, combo))
+
+# --- symbolic hotkeys, written as XML so the types are real (trap 2) ------
+print("  raccourcis systeme")
+XML = ("<dict><key>enabled</key><true/><key>value</key><dict>"
+       "<key>parameters</key><array>"
+       "<integer>%d</integer><integer>%d</integer><integer>%d</integer>"
+       "</array><key>type</key><string>standard</string></dict></dict>")
+wanted = {}
+for e in decl.get("symbolic_hotkeys", {}).get("entries", []):
+    mods = sum(MODS[m] for m in e["modifiers"])
+    r = defaults("write", "com.apple.symbolichotkeys", "AppleSymbolicHotKeys",
+                 "-dict-add", str(e["id"]), XML % (e["char"], e["keycode"], mods))
+    if r.returncode:
+        print("    ! id %s : %s" % (e["id"], r.stderr.strip())); rc = 1
+    else:
+        print("    id %-4s %s" % (e["id"], e["what"]))
+        wanted[str(e["id"])] = True
+
+# Verify the TYPE, not the value: a mistyped value reads back perfect.
+import plistlib, os
 try:
-    d = plistlib.load(open(p, "rb"))["AppleSymbolicHotKeys"]
-except Exception as e:
-    print("    ! illisible:", e); sys.exit(1)
-bad = []
-for k in ("118", "119", "120", "121", "122"):
-    e = d.get(k)
-    if not e:
-        bad.append(f"{k} absent"); continue
-    if not isinstance(e.get("enabled"), bool):
-        bad.append(f"{k} enabled est {type(e['enabled']).__name__}, pas bool")
-    for v in e["value"]["parameters"]:
-        if not isinstance(v, int):
-            bad.append(f"{k} parametre {v!r} est {type(v).__name__}, pas int"); break
-if bad:
-    print("    ! TYPES INVALIDES, WindowServer les ignorera en silence :")
-    for b in bad: print("      -", b)
-    sys.exit(1)
-CHECK
-then
-    echo "  types verifies : booleen et entiers"
-else
-    echo "  ! les raccourcis de bureau ne prendront PAS effet"
-fi
+    hk = plistlib.load(open(os.path.expanduser(
+        "~/Library/Preferences/com.apple.symbolichotkeys.plist"), "rb"))["AppleSymbolicHotKeys"]
+    bad = []
+    for k in wanted:
+        e = hk.get(k)
+        if not e:
+            bad.append("%s absent" % k); continue
+        if not isinstance(e.get("enabled"), bool):
+            bad.append("%s enabled est %s" % (k, type(e["enabled"]).__name__))
+        if any(not isinstance(v, int) for v in e["value"]["parameters"]):
+            bad.append("%s parametres non entiers" % k)
+    if bad:
+        print("    ! TYPES INVALIDES, WindowServer les ignorera en silence :")
+        for b in bad:
+            print("      -", b)
+        rc = 1
+    else:
+        print("    types verifies : booleen et entiers")
+except Exception as exc:
+    print("    ! verification des types impossible :", exc); rc = 1
+
+# --- input sources --------------------------------------------------------
+src = decl.get("input_sources", {})
+print("  sources de saisie")
+if src.get("show_menu"):
+    # A separate preference in its own domain, false by default. Without it
+    # the icon never appears and the whole thing looks like it failed.
+    defaults("write", "com.apple.TextInputMenu", "visible", "-bool", "true")
+    print("    menu de saisie affiche")
+
+export = defaults("export", "com.apple.HIToolbox", "-")
+if export.returncode:
+    print("    ! export du domaine impossible, sources inchangees"); rc = 1
+else:
+    import tempfile
+    d = plistlib.loads(export.stdout.encode("utf-8", "surrogateescape"))
+    srcs = d.get("AppleEnabledInputSources", [])
+    changed = False
+    # Named one at a time, never a blanket "keep only these": on a work Mac
+    # that would silently delete layouts this script knows nothing about.
+    for name in src.get("drop", []):
+        keep = [s for s in srcs if s.get("KeyboardLayout Name") != name]
+        if len(keep) != len(srcs):
+            print("    retiree : %s" % name); srcs, changed = keep, True
+    for w in src.get("want", []):
+        if any(s.get("KeyboardLayout Name") == w["name"] for s in srcs):
+            print("    deja la : %s" % w["name"]); continue
+        srcs.append({"InputSourceKind": "Keyboard Layout",
+                     "KeyboardLayout ID": int(w["id"]),
+                     "KeyboardLayout Name": w["name"]})
+        print("    ajoutee : %s (id %s)" % (w["name"], w["id"])); changed = True
+    if changed:
+        d["AppleEnabledInputSources"] = srcs
+        with tempfile.NamedTemporaryFile(suffix=".plist", delete=False) as f:
+            plistlib.dump(d, f); tmp = f.name
+        # Imported THROUGH cfprefsd rather than written to the plist file
+        # behind the preferences daemon's back.
+        r = defaults("import", "com.apple.HIToolbox", tmp)
+        os.unlink(tmp)
+        if r.returncode:
+            print("    ! import refuse, sources inchangees"); rc = 1
+        else:
+            print("    -> deconnecte-toi pour que le systeme les enregistre (piege 4)")
+
+sys.exit(rc)
+APPLY
+APPLIED=$?
+set -e
 
 ACTIVATE=/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings
 if [ -x "$ACTIVATE" ]; then
     "$ACTIVATE" -u >/dev/null 2>&1 && echo "  reglages recharges sans deconnexion" \
         || echo "  ! rechargement refuse, deconnecte-toi pour appliquer"
-else
-    echo "  ! activateSettings introuvable, deconnecte-toi pour appliquer"
 fi
-
-section "Input sources: Canadian - CSA, switched with Control-Space"
-# Control-Space is ALREADY the macOS shortcut for "select the previous input
-# source", symbolic hotkey 60, shipped with the right key code and modifier
-# and merely disabled. So this enables an existing entry rather than inventing
-# one -- and it is written in XML for the same reason as the desktops above:
-# the short syntax would make `enabled` the STRING "1" and WindowServer would
-# ignore it without a word.
-defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 60 "
-<dict>
-  <key>enabled</key><true/>
-  <key>value</key>
-  <dict>
-    <key>parameters</key>
-    <array><integer>32</integer><integer>49</integer><integer>262144</integer></array>
-    <key>type</key><string>standard</string>
-  </dict>
-</dict>"
-echo "  Controle-Espace : source de saisie precedente"
-
-# The layouts this machine should have. "Canadian - CSA" is what Windows
-# calls the Canadian Multilingual Standard. Names are the EXACT strings macOS
-# ships, read out of AppleKeyboardLayouts-L.dat -- "U.S." carries its periods,
-# and the three Canadian entries there are Canadian, CanadianFrench-PC and
-# Canadian - CSA.
-#
-# The numeric id matters and is not cosmetic. Id 80 for the CSA layout was
-# confirmed by macOS itself: after the first login it wrote
-# AppleCurrentKeyboardLayoutInputSourceID = com.apple.keylayout.Canadian-CSA.
-#
-# Plain "Canadian" is dropped ON PURPOSE and BY NAME: it and the CSA layout
-# both show as "CA" in the menu bar, so having both makes the indicator
-# useless. Removal is named one layout at a time and printed, never a blanket
-# "keep only these" -- on a work Mac that would silently delete layouts this
-# script knows nothing about.
-WANT_LAYOUTS="U.S.:0|Canadian - CSA:80"
-DROP_LAYOUTS="Canadian"
-
-if defaults export com.apple.HIToolbox - > /tmp/hitoolbox.$$.plist 2>/dev/null; then
-    if WANT="$WANT_LAYOUTS" DROP="$DROP_LAYOUTS" \
-       python3 - /tmp/hitoolbox.$$.plist <<'CSA'
-import plistlib, os, sys
-path = sys.argv[1]
-d = plistlib.load(open(path, "rb"))
-srcs = d.get("AppleEnabledInputSources", [])
-want = [w.rsplit(":", 1) for w in os.environ["WANT"].split("|") if w]
-drop = [x for x in os.environ["DROP"].split("|") if x]
-changed = False
-
-for name in drop:
-    keep = [s for s in srcs if s.get("KeyboardLayout Name") != name]
-    if len(keep) != len(srcs):
-        print("  retiree : %s" % name); srcs, changed = keep, True
-
-for name, lid in want:
-    if any(s.get("KeyboardLayout Name") == name for s in srcs):
-        print("  deja la : %s" % name); continue
-    srcs.append({"InputSourceKind": "Keyboard Layout",
-                 "KeyboardLayout ID": int(lid),
-                 "KeyboardLayout Name": name})
-    print("  ajoutee : %s (id %s)" % (name, lid)); changed = True
-
-if not changed:
-    sys.exit(1)                      # rien a ecrire
-d["AppleEnabledInputSources"] = srcs
-plistlib.dump(d, open(path, "wb"))
-CSA
-    then
-        defaults import com.apple.HIToolbox /tmp/hitoolbox.$$.plist \
-            || echo "  ! import refuse, les sources de saisie sont inchangees"
-    fi
-    rm -f /tmp/hitoolbox.$$.plist
-else
-    echo "  ! export du domaine HIToolbox impossible, sources inchangees"
-fi
-
-# Showing the input menu is a SEPARATE preference in its own domain, and it
-# defaults to off. Two input sources are not enough on their own: without
-# this the icon never appears in the menu bar, TextInputMenuAgent never
-# starts, and the whole thing looks like it failed. -bool matters here too --
-# a string "1" would be ignored like everywhere else in this file.
-defaults write com.apple.TextInputMenu visible -bool true
-echo "  menu de saisie : affiche dans la barre des menus"
-
-section "Chrome: close tab on Control-Shift-W"
-# Chrome's OWN menu, so Chrome's own defaults domain -- not -g. As above the
-# binding matches the menu ITEM TITLE, but Chrome ships its own localisation
-# instead of using AppKit's, so the French title was read straight out of its
-# locale pak rather than guessed:
-#
-#   Contents/Frameworks/Google Chrome Framework.framework/Versions/*/
-#     Resources/fr.lproj/locale.pak  ->  "Fermer l'onglet"
-#
-# Plain ASCII apostrophe, NOT the typographic one -- the difference is
-# invisible on screen and would have made the binding silently never match.
-# The English title is bound too, so a work Mac in English gets it as well.
-#
-# THE TRADE, said out loud rather than discovered later: NSUserKeyEquivalents
-# REPLACES a menu item's shortcut, it does not add a second one. Command-W
-# stops closing tabs. That is deliberate here -- it mirrors the Windows
-# laptop, where Control-W was given to delete-word-backward and closing moved
-# to Control-Shift-W -- but removing one line below gives Command-W back.
-CHROME_CLOSE_TAB=("Close Tab" "Fermer l'onglet")
-for title in "${CHROME_CLOSE_TAB[@]}"; do
-    defaults write com.google.Chrome NSUserKeyEquivalents -dict-add "$title" '^$w'
-    printf '  « %s » -> Controle-Majuscule-W\n' "$title"
-done
 
 section "Readback"
 echo "  -- global"
-defaults read -g NSUserKeyEquivalents 2>/dev/null | sed 's/^/  /' \
-    || echo "  ! rien n'a ete enregistre"
+defaults read -g NSUserKeyEquivalents 2>/dev/null | sed 's/^/  /' || echo "  aucun"
 echo "  -- Chrome"
-defaults read com.google.Chrome NSUserKeyEquivalents 2>/dev/null | sed 's/^/  /' \
-    || echo "  ! rien n'a ete enregistre pour Chrome"
+defaults read com.google.Chrome NSUserKeyEquivalents 2>/dev/null | sed 's/^/  /' || echo "  aucun"
+echo "  -- sources de saisie"
+defaults read com.apple.HIToolbox AppleEnabledInputSources 2>/dev/null \
+    | grep 'KeyboardLayout Name' | sed 's/^ */  /' || echo "  aucune"
 
 section "Done"
 cat <<'NOTE'
-Les deux reglages ne sont lus qu'au demarrage d'une application. Ferme et
-rouvre celles qui comptent, ou deconnecte-toi pour tout reprendre d'un coup.
+Les raccourcis de menu ne sont lus qu'au demarrage d'une application. Chrome
+doit donc etre RELANCE, et Commande-W ne fermera plus l'onglet :
+NSUserKeyEquivalents REMPLACE le raccourci d'une entree de menu, il n'en
+ajoute pas un deuxieme.
 
-Si le raccourci de maximisation ne fait rien dans une application, c'est
-qu'elle n'a pas le menu Fenetre > Deplacer et redimensionner : les
-applications qui ne sont pas Cocoa, comme certaines fenetres Java ou X11,
-n'ont pas de menu a lier.
+UNE SOURCE DE SAISIE AJOUTEE EXIGE UNE RECONNEXION. Voir le piege 4 en tete
+de ce fichier. Les fois suivantes, l'entree etant deja la, rien ne bouge.
 
-UNE SOURCE DE SAISIE AJOUTEE ICI N'EST PAS ENCORE ENREGISTREE. Ecrire
-AppleEnabledInputSources par defaults remplit la liste, et macOS la garde,
-mais le service de saisie ne relit cette liste qu'a l'OUVERTURE DE SESSION :
-tant qu'on ne s'est pas deconnecte, AppleSelectedInputSources reste vide, la
-disposition n'apparait pas dans le menu et Controle-Espace n'a rien entre
-quoi basculer. Deconnecte-toi et reconnecte-toi une fois apres le premier
-ajout. Les fois suivantes, l'entree etant deja la, le script ne touche a
-rien.
-
-Chrome doit etre RELANCE pour voir sa nouvelle liaison, et Commande-W ne
-fermera plus l'onglet : NSUserKeyEquivalents remplace le raccourci d'une
-entree de menu, il n'en ajoute pas un deuxieme.
-
-LES CINQ BUREAUX DOIVENT EXISTER. Ce script pose les raccourcis, il ne peut
-pas creer les bureaux : leur nombre appartient au Dock, et aucune preference
-publique ne le fixe. Un raccourci vers un bureau absent ne fait simplement
-rien. Ouvre Mission Control (Controle-Fleche haut), clique le + en haut a
-droite jusqu'a en avoir cinq. C'est a faire une fois par machine, ils
-survivent aux redemarrages.
+LES BUREAUX DOIVENT EXISTER. Ce script pose les raccourcis, il ne peut pas
+creer les bureaux : leur nombre appartient au Dock et aucune preference
+publique ne le fixe. Un raccourci vers un bureau absent ne fait rien. Ouvre
+Mission Control et clique le + jusqu'a en avoir autant que de raccourcis
+declares. A faire une fois par machine.
 NOTE
+exit $APPLIED
