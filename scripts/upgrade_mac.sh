@@ -4,9 +4,17 @@ set -euo pipefail
 # Script: upgrade_mac.sh
 # Purpose: Configure the console on a Mac -- shell, prompt, tmux, Alacritty.
 #
+# POUR LE MAC DU BUREAU, PLUS POUR LE PERSO. Depuis que le portable personnel
+# est passe a nix-darwin, home-manager possede ~/.zshrc, la configuration
+# d'Alacritty et ~/.config/tmuxinator, qui sont des liens vers le store en
+# LECTURE SEULE. Les copier par-dessus echoue, ou remplace le lien et fait
+# avorter la bascule suivante a checkLinkTargets -- partie systeme comprise.
+# Le garde-fou juste avant la premiere ecriture refuse donc de tourner sur une
+# machine geree par nix-darwin. Sur le perso, c'est `switch-mac`.
+#
 # NO ADMINISTRATOR RIGHTS. Nothing is installed system-wide, nothing calls
 # sudo, and every file it touches lives under $HOME. That is deliberate: this
-# script has to run on a managed work Mac as well as on a personal one.
+# script has to run on a managed work Mac, which has no Nix at all.
 #
 # It CONFIGURES, it does not install: tmux, neovim and Alacritty are expected
 # to be there already (bootstrap_mac.sh installs them on a personal machine).
@@ -80,6 +88,25 @@ section "Validating the machine"
 [ "$(uname -s)" = "Darwin" ] || { echo "macOS only." >&2; exit 1; }
 [ "$(id -u)" -ne 0 ] || { echo "Do not run this as root." >&2; exit 1; }
 echo "$(sw_vers -productName) $(sw_vers -productVersion) sur $(uname -m)"
+
+# Le garde-fou. Place AVANT la premiere ecriture, pas en commentaire : un
+# avertissement qu'on lit apres coup ne repare pas un dossier personnel.
+if [ -d /run/current-system ] && [ -e /run/current-system/sw ]; then
+    cat >&2 <<'STOP'
+upgrade_mac.sh : cette machine est geree par nix-darwin.
+
+home-manager possede deja ~/.zshrc, la configuration d'Alacritty et
+~/.config/tmuxinator. Ce script les ecraserait, et la bascule suivante
+avorterait au complet a checkLinkTargets, partie systeme comprise.
+
+Sur cette machine, utilise :   switch-mac
+
+Ce script reste celui du Mac du bureau, qui n'a pas Nix. Pour passer outre
+en connaissance de cause : MAC_UPGRADE_FORCE=1 ./upgrade_mac.sh
+STOP
+    [ "${MAC_UPGRADE_FORCE:-0}" = "1" ] || exit 1
+    echo "MAC_UPGRADE_FORCE=1 : on continue malgre tout." >&2
+fi
 
 section "Configuration repositories"
 sync_repos "$HOME" "$CONFIGS_REPO" "$SCRIPTS_REPO"
