@@ -201,30 +201,52 @@ defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 60 "
 </dict>"
 echo "  Controle-Espace : source de saisie precedente"
 
-# Canadian - CSA is what Windows calls the Canadian Multilingual Standard.
-# The three Canadian layouts macOS ships, read out of AppleKeyboardLayouts-L.dat:
-#   Canadian            (id 29)   CanadianFrench-PC   Canadian - CSA   (id 80)
+# The layouts this machine should have. "Canadian - CSA" is what Windows
+# calls the Canadian Multilingual Standard. Names are the EXACT strings macOS
+# ships, read out of AppleKeyboardLayouts-L.dat -- "U.S." carries its periods,
+# and the three Canadian entries there are Canadian, CanadianFrench-PC and
+# Canadian - CSA.
 #
-# APPENDED, never assigned. `defaults write ... -array` would replace the whole
-# list, and on a work Mac that means silently deleting whatever layouts are
-# already enabled there. So the domain is exported, the entry added only if
-# missing, and the result imported back through cfprefsd rather than written
-# to the plist file behind the preferences daemon's back.
+# The numeric id matters and is not cosmetic. Id 80 for the CSA layout was
+# confirmed by macOS itself: after the first login it wrote
+# AppleCurrentKeyboardLayoutInputSourceID = com.apple.keylayout.Canadian-CSA.
+#
+# Plain "Canadian" is dropped ON PURPOSE and BY NAME: it and the CSA layout
+# both show as "CA" in the menu bar, so having both makes the indicator
+# useless. Removal is named one layout at a time and printed, never a blanket
+# "keep only these" -- on a work Mac that would silently delete layouts this
+# script knows nothing about.
+WANT_LAYOUTS="U.S.:0|Canadian - CSA:80"
+DROP_LAYOUTS="Canadian"
+
 if defaults export com.apple.HIToolbox - > /tmp/hitoolbox.$$.plist 2>/dev/null; then
-    if python3 - /tmp/hitoolbox.$$.plist <<'CSA'
-import plistlib, sys
-p = sys.argv[1]
-d = plistlib.load(open(p, "rb"))
+    if WANT="$WANT_LAYOUTS" DROP="$DROP_LAYOUTS" \
+       python3 - /tmp/hitoolbox.$$.plist <<'CSA'
+import plistlib, os, sys
+path = sys.argv[1]
+d = plistlib.load(open(path, "rb"))
 srcs = d.get("AppleEnabledInputSources", [])
-if any(s.get("KeyboardLayout Name") == "Canadian - CSA" for s in srcs):
-    print("  Canadian - CSA : deja presente")
-    sys.exit(1)          # rien a ecrire
-srcs.append({"InputSourceKind": "Keyboard Layout",
-             "KeyboardLayout ID": 80,
-             "KeyboardLayout Name": "Canadian - CSA"})
+want = [w.rsplit(":", 1) for w in os.environ["WANT"].split("|") if w]
+drop = [x for x in os.environ["DROP"].split("|") if x]
+changed = False
+
+for name in drop:
+    keep = [s for s in srcs if s.get("KeyboardLayout Name") != name]
+    if len(keep) != len(srcs):
+        print("  retiree : %s" % name); srcs, changed = keep, True
+
+for name, lid in want:
+    if any(s.get("KeyboardLayout Name") == name for s in srcs):
+        print("  deja la : %s" % name); continue
+    srcs.append({"InputSourceKind": "Keyboard Layout",
+                 "KeyboardLayout ID": int(lid),
+                 "KeyboardLayout Name": name})
+    print("  ajoutee : %s (id %s)" % (name, lid)); changed = True
+
+if not changed:
+    sys.exit(1)                      # rien a ecrire
 d["AppleEnabledInputSources"] = srcs
-plistlib.dump(d, open(p, "wb"))
-print("  Canadian - CSA : ajoutee (%d sources au total)" % len(srcs))
+plistlib.dump(d, open(path, "wb"))
 CSA
     then
         defaults import com.apple.HIToolbox /tmp/hitoolbox.$$.plist \
