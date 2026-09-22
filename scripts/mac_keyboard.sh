@@ -235,6 +235,14 @@ else
     echo "  ! export du domaine HIToolbox impossible, sources inchangees"
 fi
 
+# Showing the input menu is a SEPARATE preference in its own domain, and it
+# defaults to off. Two input sources are not enough on their own: without
+# this the icon never appears in the menu bar, TextInputMenuAgent never
+# starts, and the whole thing looks like it failed. -bool matters here too --
+# a string "1" would be ignored like everywhere else in this file.
+defaults write com.apple.TextInputMenu visible -bool true
+echo "  menu de saisie : affiche dans la barre des menus"
+
 section "Chrome: close tab on Control-Shift-W"
 # Chrome's OWN menu, so Chrome's own defaults domain -- not -g. As above the
 # binding matches the menu ITEM TITLE, but Chrome ships its own localisation
