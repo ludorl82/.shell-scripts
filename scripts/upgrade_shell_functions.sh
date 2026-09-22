@@ -6,7 +6,15 @@ SSH_CONFIGS=(
     "X11Forwarding yes"
     "X11DisplayOffset 10"
     "X11UseLocalhost no"
-    "AcceptEnv LANG LC_* ENV CLIENT DISPLAY"
+    # ENV et CLIENT ont ete retires de cette liste le 2026-09-22 : rien ne les
+    # definissait nulle part, et leurs seuls lecteurs -- le garde-fou de
+    # tmuxinator_wrapper.sh, la branche xclip de pbcopy.sh et une ligne de
+    # .console.zshrc.zsh -- sont partis avec eux. Ils venaient de l'epoque ou
+    # Windows Terminal les poussait par SendEnv.
+    # Les trois lignes X11 ci-dessus datent de la meme epoque et meritent le
+    # meme examen, mais elles n'ont pas ete touchees ici : DISPLAY reste dans
+    # AcceptEnv et le renvoi X11 peut servir a autre chose.
+    "AcceptEnv LANG LC_* DISPLAY"
 )
 
 # Function to clone or pull git repositories
