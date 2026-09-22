@@ -182,6 +182,59 @@ else
     echo "  ! activateSettings introuvable, deconnecte-toi pour appliquer"
 fi
 
+section "Input sources: Canadian - CSA, switched with Control-Space"
+# Control-Space is ALREADY the macOS shortcut for "select the previous input
+# source", symbolic hotkey 60, shipped with the right key code and modifier
+# and merely disabled. So this enables an existing entry rather than inventing
+# one -- and it is written in XML for the same reason as the desktops above:
+# the short syntax would make `enabled` the STRING "1" and WindowServer would
+# ignore it without a word.
+defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 60 "
+<dict>
+  <key>enabled</key><true/>
+  <key>value</key>
+  <dict>
+    <key>parameters</key>
+    <array><integer>32</integer><integer>49</integer><integer>262144</integer></array>
+    <key>type</key><string>standard</string>
+  </dict>
+</dict>"
+echo "  Controle-Espace : source de saisie precedente"
+
+# Canadian - CSA is what Windows calls the Canadian Multilingual Standard.
+# The three Canadian layouts macOS ships, read out of AppleKeyboardLayouts-L.dat:
+#   Canadian            (id 29)   CanadianFrench-PC   Canadian - CSA   (id 80)
+#
+# APPENDED, never assigned. `defaults write ... -array` would replace the whole
+# list, and on a work Mac that means silently deleting whatever layouts are
+# already enabled there. So the domain is exported, the entry added only if
+# missing, and the result imported back through cfprefsd rather than written
+# to the plist file behind the preferences daemon's back.
+if defaults export com.apple.HIToolbox - > /tmp/hitoolbox.$$.plist 2>/dev/null; then
+    if python3 - /tmp/hitoolbox.$$.plist <<'CSA'
+import plistlib, sys
+p = sys.argv[1]
+d = plistlib.load(open(p, "rb"))
+srcs = d.get("AppleEnabledInputSources", [])
+if any(s.get("KeyboardLayout Name") == "Canadian - CSA" for s in srcs):
+    print("  Canadian - CSA : deja presente")
+    sys.exit(1)          # rien a ecrire
+srcs.append({"InputSourceKind": "Keyboard Layout",
+             "KeyboardLayout ID": 80,
+             "KeyboardLayout Name": "Canadian - CSA"})
+d["AppleEnabledInputSources"] = srcs
+plistlib.dump(d, open(p, "wb"))
+print("  Canadian - CSA : ajoutee (%d sources au total)" % len(srcs))
+CSA
+    then
+        defaults import com.apple.HIToolbox /tmp/hitoolbox.$$.plist \
+            || echo "  ! import refuse, les sources de saisie sont inchangees"
+    fi
+    rm -f /tmp/hitoolbox.$$.plist
+else
+    echo "  ! export du domaine HIToolbox impossible, sources inchangees"
+fi
+
 section "Chrome: close tab on Control-Shift-W"
 # Chrome's OWN menu, so Chrome's own defaults domain -- not -g. As above the
 # binding matches the menu ITEM TITLE, but Chrome ships its own localisation
