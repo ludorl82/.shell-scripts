@@ -23,12 +23,20 @@ set -euo pipefail
 display="${1:-}"
 
 if [ -z "$display" ]; then
-  echo "usage: mux <console|ide|claude>" >&2
+  echo "usage: mux <console|ide|claude|qwen>" >&2
   exit 1
 fi
 
 case "$display" in
   console|ide) exec tmuxinator "$display" ;;
-  claude)      exec tmux -L console attach -t claude ;;
-  *) echo "agencement inconnu: $display (console, ide ou claude)" >&2; exit 1 ;;
+  # claude et qwen sont des sessions qui existent deja, ouvertes au demarrage
+  # du conteneur par nixos-iac (modules/console-container.nix, options
+  # claudeSession et qwenSession) : on s'y attache, on ne les cree pas.
+  claude|qwen)
+    tmux -L console has-session -t "$display" 2>/dev/null || {
+      echo "pas de session $display sur ce conteneur (option ${display}Session de modules/console-container.nix)" >&2
+      exit 1
+    }
+    exec tmux -L console attach -t "$display" ;;
+  *) echo "agencement inconnu: $display (console, ide, claude ou qwen)" >&2; exit 1 ;;
 esac
