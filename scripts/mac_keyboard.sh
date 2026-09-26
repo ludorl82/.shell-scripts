@@ -16,6 +16,14 @@ set -euo pipefail
 # NO ADMINISTRATOR RIGHTS, on purpose. Everything touched is a per-user
 # preference. Nothing is installed, nothing calls sudo.
 #
+# MODIFIER KEYS (2026-09-26): Caps Lock and friends are remapped at the HID
+# level with `hidutil property --set UserKeyMapping`, which needs no sudo and
+# covers every keyboard, built-in or plugged in. It does not survive a reboot,
+# so the same command is written into a per-user LaunchAgent that launchd runs
+# at every login. The System Settings route (Keyboard > Modifier Keys) writes
+# one preference PER KEYBOARD, keyed by vendor and product id, and would miss
+# the next keyboard plugged into the work Mac.
+#
 # FOUR TRAPS, each paid for in a real evening:
 #
 # 1. PATH. home-manager's activation runs without /usr/bin, and sw_vers,
@@ -163,6 +171,46 @@ try:
         print("    types verifies : booleen et entiers")
 except Exception as exc:
     print("    ! verification des types impossible :", exc); rc = 1
+
+# --- modifier keys (hidutil + a LaunchAgent, see the header) --------------
+HID = {"caps_lock": 0x700000039}
+TO = {"control": 0x7000000E0, "escape": 0x700000029,
+      "option": 0x7000000E2, "command": 0x7000000E3}
+mods = {k: v for k, v in decl.get("modifier_keys", {}).items() if not k.startswith("_")}
+if mods:
+    print("  touches de modification")
+    mapping = []
+    for key, dst in mods.items():
+        if key not in HID or (dst != "none" and dst not in TO):
+            print("    ! inconnu : %s -> %s" % (key, dst)); rc = 1; continue
+        if dst != "none":
+            mapping.append({"HIDKeyboardModifierMappingSrc": HID[key],
+                            "HIDKeyboardModifierMappingDst": TO[dst]})
+        print("    %-10s -> %s" % (key, dst))
+    spec = json.dumps({"UserKeyMapping": mapping})
+    r = subprocess.run(["/usr/bin/hidutil", "property", "--set", spec],
+                       capture_output=True, text=True)
+    if r.returncode:
+        print("    ! hidutil a refuse : %s" % r.stderr.strip()); rc = 1
+    agent = os.path.expanduser("~/Library/LaunchAgents/ca.labodeludo.keyboard-remap.plist")
+    if mapping:
+        os.makedirs(os.path.dirname(agent), exist_ok=True)
+        with open(agent, "wb") as f:
+            plistlib.dump({"Label": "ca.labodeludo.keyboard-remap",
+                           "ProgramArguments": ["/usr/bin/hidutil", "property", "--set", spec],
+                           "RunAtLoad": True}, f)
+        print("    agent de connexion : %s" % agent)
+    elif os.path.exists(agent):
+        os.unlink(agent)
+        print("    agent de connexion retire (plus rien a remapper)")
+    # Read back what the HID layer really holds, not what was sent.
+    got = subprocess.run(["/usr/bin/hidutil", "property", "--get", "UserKeyMapping"],
+                         capture_output=True, text=True).stdout
+    # hidutil prints the usages in DECIMAL (0x7000000E0 -> 30064771296).
+    if mapping and not any(str(m["HIDKeyboardModifierMappingDst"]) in got for m in mapping):
+        print("    ! relu : AUCUN clavier ne porte le remappage"); rc = 1
+    elif mapping:
+        print("    relu : remappage actif")
 
 # --- input sources --------------------------------------------------------
 src = decl.get("input_sources", {})
