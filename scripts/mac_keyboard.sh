@@ -177,6 +177,14 @@ HID = {"caps_lock": 0x700000039}
 TO = {"control": 0x7000000E0, "escape": 0x700000029,
       "option": 0x7000000E2, "command": 0x7000000E3}
 mods = {k: v for k, v in decl.get("modifier_keys", {}).items() if not k.startswith("_")}
+agent = os.path.expanduser("~/Library/LaunchAgents/ca.labodeludo.keyboard-remap.plist")
+# Declarative both ways: a section deleted from the JSON must UNDO the remap,
+# not leave the last one running from an agent nobody remembers.
+if not mods and os.path.exists(agent):
+    subprocess.run(["/usr/bin/hidutil", "property", "--set", '{"UserKeyMapping":[]}'],
+                   capture_output=True)
+    os.unlink(agent)
+    print("  touches de modification : aucune declaree, remappage et agent retires")
 if mods:
     print("  touches de modification")
     mapping = []
@@ -192,7 +200,6 @@ if mods:
                        capture_output=True, text=True)
     if r.returncode:
         print("    ! hidutil a refuse : %s" % r.stderr.strip()); rc = 1
-    agent = os.path.expanduser("~/Library/LaunchAgents/ca.labodeludo.keyboard-remap.plist")
     if mapping:
         os.makedirs(os.path.dirname(agent), exist_ok=True)
         with open(agent, "wb") as f:
