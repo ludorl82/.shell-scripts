@@ -109,7 +109,11 @@ set +e
 python3 - "$DECL" <<'APPLY'
 import json, subprocess, sys
 
-MODS = {"shift": 131072, "control": 262144, "option": 524288, "command": 1048576}
+# "function" is the 0x800000 flag macOS itself puts on every ARROW key
+# shortcut (its own entries 79-82 carry it); without it an arrow binding is a
+# different key and never fires.
+MODS = {"shift": 131072, "control": 262144, "option": 524288, "command": 1048576,
+        "function": 8388608}
 decl = json.load(open(sys.argv[1]))
 rc = 0
 
