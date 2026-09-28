@@ -17,11 +17,14 @@ input="${input%$'\n'}"
 # ssh et tmux sans agent ni serveur X.
 encoded=$(printf "%s" "$input" | base64 | tr -d '\n')
 
-if [ -n "$TMUX" ]; then
-  # Dans tmux, la sequence doit etre emballee pour traverser le multiplexeur
-  # et viser le tty du panneau, pas celui du processus.
-  target_tty="${1:-$(tmux display-message -p "#{pane_tty}" 2>/dev/null || echo "/dev/tty")}"
-  printf "\ePtmux;\e\e]52;c;%s\a\e\\" "$encoded" > "$target_tty"
+if [ -n "${TMUX:-}" ]; then
+  # Dans tmux, on confie le texte a tmux, qui envoie lui-meme la sequence OSC 52
+  # a son client (load-buffer -w). L'ancienne voie, une sequence emballee
+  # « \ePtmux; » ecrite dans le tty du panneau, etait jetee EN SILENCE par
+  # tmux >= 3.3 puisque allow-passthrough est a off ici (et doit le rester) :
+  # ni Neovim ni la touche Y ne copiaient vers le Mac (corrige le 2026-09-28).
+  # Le premier argument (un tty) est accepte et ignore, pour les appelants.
+  printf "%s" "$input" | tmux load-buffer -w -
 else
   printf "\033]52;c;%s\007" "$encoded" > /dev/tty
 fi
